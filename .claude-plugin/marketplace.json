@@ -1,0 +1,15 @@
+{
+  "name": "jira-git-sync-marketplace",
+  "owner": {
+    "name": "Luca Valsecchi",
+    "email": "thebous1993@gmail.com"
+  },
+  "description": "Git workflow automation: branch, PR, merge, tag — synced with Jira and Slack",
+  "plugins": [
+    {
+      "name": "jira-git-sync",
+      "source": ".",
+      "description": "New branch, create/merge PR, tag release — auto-updates Jira status and notifies Slack"
+    }
+  ]
+}
