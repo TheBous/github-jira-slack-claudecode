@@ -1,15 +1,27 @@
 {
-  "name": "jira-git-sync-marketplace",
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "jira-git-sync",
+  "version": "1.0.0",
+  "description": "Git workflow automation: branch, PR, merge, tag — synced with Jira and Slack",
   "owner": {
     "name": "Luca Valsecchi",
     "email": "thebous1993@gmail.com"
   },
-  "description": "Git workflow automation: branch, PR, merge, tag — synced with Jira and Slack",
+  "homepage": "https://github.com/TheBous/github-jira-slack-claudecode",
+  "repository": "https://github.com/TheBous/github-jira-slack-claudecode",
   "plugins": [
     {
       "name": "jira-git-sync",
-      "source": ".",
-      "description": "New branch, create/merge PR, tag release — auto-updates Jira status and notifies Slack"
+      "version": "1.0.0",
+      "description": "New branch, create/merge PR, tag release — auto-updates Jira status and notifies Slack",
+      "author": {
+        "name": "Luca Valsecchi",
+        "email": "thebous1993@gmail.com"
+      },
+      "keywords": ["jira", "slack", "git", "github", "automation", "devops"],
+      "homepage": "https://github.com/TheBous/github-jira-slack-claudecode",
+      "repository": "https://github.com/TheBous/github-jira-slack-claudecode",
+      "source": "./"
     }
   ]
 }
