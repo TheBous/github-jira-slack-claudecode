@@ -40,13 +40,14 @@ Costruisci il nome del branch: `feature/<key-lowercase>-<titolo-slugificato>`.
 
 Mostra il nome proposto e chiedi conferma. L'utente può modificarlo.
 
-### 3. Crea il branch
+### 3. Crea il branch e pushalo
 
 ```bash
 git checkout -b <nome-branch>
+git push -u origin <nome-branch>
 ```
 
-Se il branch esiste già, avvisa l'utente e fai `git checkout <nome-branch>`.
+Se il branch esiste già, avvisa l'utente e fai `git checkout <nome-branch>` seguito da `git push -u origin <nome-branch>`.
 
 ### 4. Transizione Jira (solo se c'è un ticket)
 
