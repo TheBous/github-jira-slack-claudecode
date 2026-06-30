@@ -40,7 +40,23 @@ Costruisci il nome del branch: `feature/<key-lowercase>-<titolo-slugificato>`.
 
 Mostra il nome proposto e chiedi conferma. L'utente può modificarlo.
 
-### 3. Crea il branch e pushalo
+### 3. Cerca documentazione rilevante (solo se c'è un ticket Jira)
+
+Se `CONFLUENCE_PARENT_URL` è configurato nel `.env`:
+
+Estrai 3-5 parole chiave significative da titolo e descrizione del ticket (escludi articoli, verbi comuni, parole di rumore). Estrai il `PARENT_PAGE_ID` da `CONFLUENCE_PARENT_URL` con:
+```bash
+echo "$CONFLUENCE_PARENT_URL" | grep -oP '(?<=pages/)[0-9]+'
+```
+
+Usa il tool MCP `searchConfluenceUsingCql` con:
+```
+ancestor = <PARENT_PAGE_ID> AND (title ~ "<keyword1>" OR title ~ "<keyword2>" OR label = "<keyword1>")
+```
+
+Se trova risultati, mostra all'utente i titoli e gli URL delle pagine trovate come contesto prima di iniziare. Se non trova nulla, prosegui in silenzio.
+
+### 4. Crea il branch e pushalo
 
 ```bash
 git checkout -b <nome-branch>
@@ -49,7 +65,7 @@ git push -u origin <nome-branch>
 
 Se il branch esiste già, avvisa l'utente e fai `git checkout <nome-branch>` seguito da `git push -u origin <nome-branch>`.
 
-### 4. Transizione Jira (solo se c'è un ticket)
+### 5. Transizione Jira (solo se c'è un ticket)
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
@@ -69,7 +85,7 @@ curl -sf -o /dev/null \
   -d "{\"body\":\"🌿 Branch \`<nome-branch>\` creato.\"}"
 ```
 
-### 5. Notifica Slack
+### 6. Notifica Slack
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
@@ -80,7 +96,7 @@ curl -sf -o /dev/null -X POST "$SLACK_WEBHOOK_URL" \
 
 Se non c'era ticket Jira, il messaggio Slack è solo: `🌿 Nuovo branch: \`<nome-branch>\``
 
-### 6. Conferma
+### 7. Conferma
 
 Mostra all'utente:
 - Branch creato: `<nome-branch>`

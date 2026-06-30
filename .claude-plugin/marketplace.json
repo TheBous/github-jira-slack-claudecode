@@ -1,8 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "jira-git-sync",
-  "version": "1.0.1",
-  "description": "Git workflow automation: branch, PR, merge, tag — synced with Jira and Slack",
+  "version": "1.0.2",
+  "description": "Git workflow automation: branch, PR, merge, tag — synced with Jira, Slack and Confluence",
   "owner": {
     "name": "Luca Valsecchi",
     "email": "thebous1993@gmail.com"
@@ -12,8 +12,8 @@
   "plugins": [
     {
       "name": "jira-git-sync",
-      "version": "1.0.1",
-      "description": "New branch, create/merge PR, tag release — auto-updates Jira status and notifies Slack",
+      "version": "1.0.2",
+      "description": "New branch, create/merge PR, tag release — auto-updates Jira status, notifies Slack, manages Confluence docs",
       "author": {
         "name": "Luca Valsecchi",
         "email": "thebous1993@gmail.com"

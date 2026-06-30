@@ -77,9 +77,42 @@ curl -sf -o /dev/null -X POST "$SLACK_WEBHOOK_URL" \
 
 Se non c'è ticket Jira, il messaggio Slack è: `🔀 PR #<NUMERO> mergiata su main — <TITOLO_PR>`
 
-### 6. Conferma
+### 6. Aggiornamento documentazione Confluence (se configurato)
+
+Se `CONFLUENCE_PARENT_URL` è nel `.env` e non è vuoto:
+
+Recupera i file modificati nel branch mergiato:
+```bash
+git diff main...<BRANCH_NAME> --name-only
+```
+
+Estrai il `PARENT_PAGE_ID` da `CONFLUENCE_PARENT_URL`:
+```bash
+echo "$CONFLUENCE_PARENT_URL" | grep -oP '(?<=pages/)[0-9]+'
+```
+
+Usa il tool MCP `searchConfluenceUsingCql` cercando pagine che menzionano i file cambiati:
+```
+ancestor = <PARENT_PAGE_ID> AND text ~ "<file1>" OR text ~ "<file2>"
+```
+
+Se trova candidati, mostra all'utente:
+```
+📄 Queste pagine Confluence potrebbero necessitare aggiornamento:
+- <titolo1>: <url1>
+- <titolo2>: <url2>
+
+Vuoi aggiornare qualcuna di queste? (sì/no/elenca quali)
+```
+
+Per ogni pagina confermata, chiedi all'utente cosa aggiornare e usa il tool MCP `updateConfluencePage` con il contenuto modificato.
+
+Se non trova candidati o l'utente rifiuta, prosegui silenziosamente.
+
+### 7. Conferma
 
 Mostra all'utente:
 - PR #`<NUMERO>` mergiata
 - Ticket `<KEY>` → In Staging (se applicabile)
 - Slack: notificato
+- Documentazione aggiornata: `<lista pagine aggiornate>` (se applicabile)
