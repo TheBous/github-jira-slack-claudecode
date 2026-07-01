@@ -18,12 +18,28 @@ gh pr list --author @me --state open --json number,title,headRefName,createdAt \
   --template '{{range .}}#{{.number}} | {{.headRefName}} | {{.title}}{{"\n"}}{{end}}'
 ```
 
+**Se il comando fallisce con un errore TLS/certificato**, usa questo fallback:
+```bash
+OWNER_REPO=$(git remote get-url origin | sed -E 's#.*[:/]([^/]+/[^/]+)(\.git)?$#\1#')
+ME=$(curl -sf -H "Authorization: Bearer $(gh auth token)" https://api.github.com/user | jq -r '.login')
+curl -sf -H "Authorization: Bearer $(gh auth token)" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls?state=open" \
+  | jq --arg me "$ME" '[.[] | select(.user.login == $me)] | .[] | {number, headRefName: .head.ref, title}'
+```
+
 Mostra la lista all'utente e chiedi quale PR vuole mergeare. Attendi la risposta.
 
 ### 2. Recupera dettagli della PR
 
 ```bash
 gh pr view <NUMERO> --json number,title,headRefName,url,body
+```
+
+**Fallback TLS**:
+```bash
+curl -sf -H "Authorization: Bearer $(gh auth token)" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMERO>" \
+  | jq '{number, title, headRefName: .head.ref, url: .html_url, body}'
 ```
 
 Estrai:
@@ -41,6 +57,14 @@ Chiedi all'utente quale tipo di merge preferisce (default: squash):
 ```bash
 gh pr merge <NUMERO> --squash --auto
 # oppure --merge o --rebase in base alla scelta
+```
+
+**Fallback TLS**:
+```bash
+curl -sf -X PUT -H "Authorization: Bearer $(gh auth token)" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMERO>/merge" \
+  -d '{"merge_method":"squash"}'
+# merge_method: "squash" | "merge" | "rebase" in base alla scelta
 ```
 
 ### 4. Transizione e commento Jira

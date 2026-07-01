@@ -17,6 +17,15 @@ Altrimenti, rileva la PR dal branch corrente:
 gh pr view --json number,title,url,headRefName 2>/dev/null
 ```
 
+**Se il comando fallisce con un errore TLS/certificato**, usa questo fallback:
+```bash
+OWNER_REPO=$(git remote get-url origin | sed -E 's#.*[:/]([^/]+/[^/]+)(\.git)?$#\1#')
+BRANCH=$(git branch --show-current)
+curl -sf -H "Authorization: Bearer $(gh auth token)" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls?head=$(echo $OWNER_REPO | cut -d/ -f1):$BRANCH&state=open" \
+  | jq '.[0] | {number, title, url: .html_url, headRefName: .head.ref}'
+```
+
 Se non esiste una PR aperta per il branch corrente, chiedi all'utente di passare l'URL esplicitamente.
 
 ### 2. Recupera i commenti della review
@@ -27,6 +36,17 @@ gh pr view <NUMERO> --json reviews,comments \
 
 gh api repos/:owner/:repo/pulls/<NUMERO>/comments \
   --jq '.[] | {path: .path, line: .line, body: .body, author: .user.login}'
+```
+
+**Fallback TLS**:
+```bash
+curl -sf -H "Authorization: Bearer $(gh auth token)" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMERO>/reviews" \
+  | jq '.[] | select(.state == "CHANGES_REQUESTED") | {author: .user.login, body}'
+
+curl -sf -H "Authorization: Bearer $(gh auth token)" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMERO>/comments" \
+  | jq '.[] | {path, line, body, author: .user.login}'
 ```
 
 Raccoglie sia i commenti generali che quelli inline sul codice.
@@ -99,6 +119,13 @@ Posta la risposta con:
 ```bash
 gh api repos/:owner/:repo/pulls/comments/<COMMENT_ID>/replies \
   -X POST -f body="<risposta con emoji>"
+```
+
+**Fallback TLS**:
+```bash
+curl -sf -X POST -H "Authorization: Bearer $(gh auth token)" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls/comments/<COMMENT_ID>/replies" \
+  -d "{\"body\":\"<risposta con emoji>\"}"
 ```
 
 ### 9. Conferma

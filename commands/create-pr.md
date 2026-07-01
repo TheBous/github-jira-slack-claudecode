@@ -102,6 +102,17 @@ gh pr create \
 
 Cattura l'URL della PR dall'output.
 
+**Se il comando fallisce con un errore TLS/certificato** (es. `tls: failed to verify certificate: x509: ...`), usa questo fallback:
+```bash
+OWNER_REPO=$(git remote get-url origin | sed -E 's#.*[:/]([^/]+/[^/]+)(\.git)?$#\1#')
+curl -sf \
+  -H "Authorization: Bearer $(gh auth token)" \
+  -H "Accept: application/vnd.github+json" \
+  -X POST "https://api.github.com/repos/$OWNER_REPO/pulls" \
+  -d "{\"title\":\"<titolo generato>\",\"body\":\"<descrizione generata>\",\"head\":\"$(git branch --show-current)\",\"base\":\"main\"}" \
+  | jq '{number, url: .html_url}'
+```
+
 ### 6. Transizione e commento Jira
 
 Se c'è un ticket e `JIRA_IN_REVIEW_ID` è configurato e non vuoto:
