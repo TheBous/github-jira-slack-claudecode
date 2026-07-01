@@ -4,7 +4,7 @@ description: Risolve i commenti di una code review, poi aggiorna la documentazio
 
 ## Obiettivo
 
-Leggere i commenti aperti di una PR GitHub, risolverli tramite la skill `superpowers:receiving-code-review`, e aggiornare la documentazione (locale e/o Confluence) se i cambi lo richiedono.
+Leggere i commenti aperti di una PR GitHub e risolverli uno alla volta: per ogni commento, proporre una fix, attendere l'approvazione dell'utente, applicarla solo dopo conferma, poi rispondere sulla PR. Nessuna modifica al codice viene fatta senza permesso esplicito. A fine ciclo, aggiornare la documentazione se necessario.
 
 ## Passi
 
@@ -49,17 +49,68 @@ curl -sf -H "Authorization: Bearer $(gh auth token)" \
   | jq '.[] | {path, line, body, author: .user.login}'
 ```
 
-Raccoglie sia i commenti generali che quelli inline sul codice.
+Raccoglie sia i commenti generali che quelli inline sul codice. Ordina i commenti inline per file e poi per numero di linea (ordine di apparizione nella PR). I commenti generali (review-level) vanno affrontati prima, in ordine cronologico.
 
-### 3. Invoca la skill receiving-code-review
+### 3. Imposta l'approccio con receiving-code-review
 
-Usa il tool Skill con `superpowers:receiving-code-review`, passando come contesto i commenti recuperati al passo 2 e i file della PR.
+Se la skill `superpowers:receiving-code-review` è disponibile nel workspace, invocala una volta tramite il tool Skill per impostare l'approccio: rigore tecnico, verifica prima di implementare, niente accordo performativo. Applica questi principi manualmente per ogni commento nel ciclo del passo 4 — non re-invocare la skill ad ogni iterazione.
 
-Se la skill non è disponibile nel workspace, procedi manualmente: analizza i commenti, proponi le fix, applicale dopo conferma dell'utente.
+Se non è disponibile, procedi comunque con lo stesso principio: valuta se il commento è tecnicamente fondato prima di proporre una fix.
 
-### 4. Analizza il diff post-fix e individua doc da aggiornare
+### 4. Risolvi i commenti uno alla volta
 
-Dopo che le fix sono state applicate:
+**Non modificare mai il codice senza permesso esplicito dell'utente.** Per ogni commento, nell'ordine stabilito al passo 2:
+
+1. Mostra il commento:
+   ```
+   📝 Commento su <file>:<line> (di <author>)
+   "<testo del commento>"
+   ```
+2. Analizza il commento e proponi una fix concreta:
+   ```
+   💡 Proposta: <descrizione della modifica che faresti>
+
+   Va bene? Vuoi modificarla o hai un'opinione diversa?
+   ```
+3. Attendi la risposta dell'utente. In base a cosa dice:
+   - **Approva**: applica la fix al codice
+   - **Modifica la proposta**: adatta la fix secondo le indicazioni, poi applicala
+   - **Non è d'accordo / vuole altro**: discuti finché non si converge su un'azione (che può essere anche "non cambiare nulla")
+4. Determina lo stato finale in base a cosa è stato deciso, usando questa tabella:
+
+   | Stato | Formato | Quando usarlo |
+   |-------|---------|---------------|
+   | ✅ Fixed | `✅ Fixed — <breve descrizione del cambio>` | Modifica applicata |
+   | 🔄 Refactored | `🔄 Refactored — <cosa è cambiato e perché>` | Fix che ha comportato una ristrutturazione più ampia |
+   | 💬 Acknowledged | `💬 Acknowledged — <motivazione per non cambiare>` | Commento valido ma non richiede modifica al codice |
+   | ❓ Clarification needed | `❓ Clarification needed — <domanda specifica>` | Il commento non è chiaro o serve più contesto dal reviewer |
+   | 🚫 Won't Fix | `🚫 Won't Fix — <motivazione tecnica o di prodotto>` | Scelta intenzionale di non applicare il cambiamento |
+   | ⛔ Stalled | `⛔ Stalled — <dipendenza o blocco>` | Non risolvibile ora, bloccato da qualcosa di esterno |
+
+5. Posta subito la risposta su quel commento, prima di passare al successivo:
+   ```bash
+   gh api repos/:owner/:repo/pulls/comments/<COMMENT_ID>/replies \
+     -X POST -f body="<risposta con emoji>"
+   ```
+
+   **Fallback TLS**:
+   ```bash
+   curl -sf -X POST -H "Authorization: Bearer $(gh auth token)" \
+     "https://api.github.com/repos/$OWNER_REPO/pulls/comments/<COMMENT_ID>/replies" \
+     -d "{\"body\":\"<risposta con emoji>\"}"
+   ```
+
+Ripeti dal punto 1 per il commento successivo, finché la lista non è esaurita.
+
+### 5. Runna i test
+
+Se sono state applicate modifiche al codice durante il ciclo, leggi `references/run-tests.md` (nella root del plugin) e segui le istruzioni per trovare e runnare i test/lint/check del progetto.
+
+Se nessun commento ha richiesto modifiche al codice, salta questo passo.
+
+### 6. Analizza il diff complessivo e individua doc da aggiornare
+
+Dopo aver risolto tutti i commenti del ciclo:
 ```bash
 git diff HEAD --name-only
 ```
@@ -81,7 +132,7 @@ Se `CONFLUENCE_PARENT_URL` è non vuoto, usa il tool MCP `searchConfluenceUsingC
 ancestor = <PARENT_PAGE_ID> AND text ~ "<file-modificato>"
 ```
 
-### 5. Chiedi conferma prima di aggiornare i doc
+### 7. Chiedi conferma prima di aggiornare i doc
 
 Se ha trovato candidati (locali o Confluence), mostra all'utente:
 ```
@@ -94,7 +145,7 @@ Vuoi aggiornarli? (sì/no/elenca quali)
 
 Attendi risposta prima di procedere.
 
-### 6. Aggiorna la documentazione
+### 8. Aggiorna la documentazione
 
 **Docs locale**: modifica direttamente i file `.md` nella cartella `docs/` con le informazioni aggiornate. Mostra il diff prima di salvare.
 
@@ -102,36 +153,11 @@ Attendi risposta prima di procedere.
 
 Se nessun documento è stato trovato o l'utente rifiuta, salta questo passo silenziosamente.
 
-### 7. Rispondi ai commenti sulla PR
-
-Per ogni commento risolto, posta una risposta inline usando questo template:
-
-| Stato | Formato | Quando usarlo |
-|-------|---------|---------------|
-| ✅ Fixed | `✅ Fixed — <breve descrizione del cambio>` | Modifica applicata |
-| 🔄 Refactored | `🔄 Refactored — <cosa è cambiato e perché>` | Fix che ha comportato una ristrutturazione più ampia |
-| 💬 Acknowledged | `💬 Acknowledged — <motivazione per non cambiare>` | Commento valido ma non richiede modifica al codice |
-| ❓ Clarification needed | `❓ Clarification needed — <domanda specifica>` | Il commento non è chiaro o serve più contesto dal reviewer |
-| 🚫 Won't Fix | `🚫 Won't Fix — <motivazione tecnica o di prodotto>` | Scelta intenzionale di non applicare il cambiamento |
-| ⛔ Stalled | `⛔ Stalled — <dipendenza o blocco>` | Non risolvibile ora, bloccato da qualcosa di esterno |
-
-Posta la risposta con:
-```bash
-gh api repos/:owner/:repo/pulls/comments/<COMMENT_ID>/replies \
-  -X POST -f body="<risposta con emoji>"
-```
-
-**Fallback TLS**:
-```bash
-curl -sf -X POST -H "Authorization: Bearer $(gh auth token)" \
-  "https://api.github.com/repos/$OWNER_REPO/pulls/comments/<COMMENT_ID>/replies" \
-  -d "{\"body\":\"<risposta con emoji>\"}"
-```
-
 ### 9. Conferma
 
 Mostra all'utente:
 - Fix applicate ai commenti della review
+- Test: `<lista script>` — tutti verdi (se eseguiti)
 - Risposte postate sulla PR con i relativi stati emoji
 - Documentazione aggiornata: `<lista file/pagine>` (se applicabile)
 - Suggerisci di fare push del branch con `git push`
