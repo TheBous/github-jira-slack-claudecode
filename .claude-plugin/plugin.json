@@ -1,6 +1,6 @@
 {
   "name": "jira-git-sync",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Git workflow automation: new branch, PR create/merge, tag release — synced with Jira and Slack",
   "author": {
     "name": "Luca Valsecchi",

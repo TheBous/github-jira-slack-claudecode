@@ -25,14 +25,7 @@ source "${CLAUDE_PLUGIN_DATA}/.env"
 ```
 Se il file non esiste, dì all'utente di eseguire prima `/jira-git-sync:setup`.
 
-Estrai la key (es. `DC-443`) dall'URL o dall'input. Poi recupera il titolo del ticket:
-```bash
-curl -sf \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Accept: application/json" \
-  "$JIRA_BASE_URL/rest/api/2/issue/DC-443?fields=summary" \
-  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['fields']['summary'])"
-```
+Estrai la key (es. `DC-443`) dall'URL o dall'input. Poi recupera il titolo del ticket usando il tool MCP `getJiraIssue` con `issueKey: "<KEY>"` e `fields: ["summary"]`.
 
 Costruisci il nome del branch: `feature/<key-lowercase>-<titolo-slugificato>`.
 - Slugify: lowercase, spazi e caratteri speciali → `-`, max 50 caratteri dopo il prefisso.
@@ -67,23 +60,14 @@ Se il branch esiste già, avvisa l'utente e fai `git checkout <nome-branch>` seg
 
 ### 5. Transizione Jira (solo se c'è un ticket)
 
+Carica l'ID di transizione:
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/transitions" \
-  -d "{\"transition\":{\"id\":\"$JIRA_IN_PROGRESS_ID\"}}"
 ```
 
-Aggiungi un commento sul ticket:
-```bash
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/comment" \
-  -d "{\"body\":\"🌿 Branch \`<nome-branch>\` creato.\"}"
-```
+Usa il tool MCP `transitionJiraIssue` con `issueKey: "<KEY>"` e `transitionId: "$JIRA_IN_PROGRESS_ID"`.
+
+Poi usa il tool MCP `addCommentToJiraIssue` con `issueKey: "<KEY>"` e `comment: "🌿 Branch \`<nome-branch>\` creato."`.
 
 ### 6. Notifica Slack
 

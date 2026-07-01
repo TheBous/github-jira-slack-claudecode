@@ -49,21 +49,11 @@ Se c'è un ticket Jira collegato:
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
-
-# Transizione In Staging
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/transitions" \
-  -d "{\"transition\":{\"id\":\"$JIRA_IN_STAGING_ID\"}}"
-
-# Commento
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/comment" \
-  -d "{\"body\":\"🔀 PR #<NUMERO> mergiata su main: <PR_URL>\"}"
 ```
+
+Usa il tool MCP `transitionJiraIssue` con `issueKey: "<KEY>"` e `transitionId: "$JIRA_IN_STAGING_ID"`.
+
+Poi usa il tool MCP `addCommentToJiraIssue` con `issueKey: "<KEY>"` e `comment: "🔀 PR #<NUMERO> mergiata su main: <PR_URL>"`.
 
 ### 5. Notifica Slack
 

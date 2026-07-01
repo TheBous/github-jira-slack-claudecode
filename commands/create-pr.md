@@ -31,20 +31,7 @@ git push -u origin "$(git branch --show-current)"
 
 Dal nome del branch, cerca un pattern `[A-Z]+-[0-9]+` (es. `dc-443` → `DC-443`).
 
-Se trovato, carica le credenziali e recupera titolo e descrizione del ticket:
-```bash
-source "${CLAUDE_PLUGIN_DATA}/.env"
-curl -sf \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Accept: application/json" \
-  "$JIRA_BASE_URL/rest/api/2/issue/<KEY>?fields=summary,description" \
-  | python3 -c "
-import sys, json
-d = json.load(sys.stdin)['fields']
-print('SUMMARY:', d.get('summary',''))
-print('DESC:', (d.get('description') or '')[:500])
-"
-```
+Se trovato, recupera titolo e descrizione del ticket usando il tool MCP `getJiraIssue` con `issueKey: "<KEY>"` e `fields: ["summary", "description"]`.
 
 ### 3. Analizza le differenze col branch base
 
@@ -118,23 +105,14 @@ Cattura l'URL della PR dall'output.
 ### 6. Transizione e commento Jira
 
 Se c'è un ticket e `JIRA_IN_REVIEW_ID` è configurato e non vuoto:
+
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/transitions" \
-  -d "{\"transition\":{\"id\":\"$JIRA_IN_REVIEW_ID\"}}"
 ```
 
-Commento sul ticket:
-```bash
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/comment" \
-  -d "{\"body\":\"🔍 PR aperta: <PR_URL>\"}"
-```
+Usa il tool MCP `transitionJiraIssue` con `issueKey: "<KEY>"` e `transitionId: "$JIRA_IN_REVIEW_ID"`.
+
+Poi usa il tool MCP `addCommentToJiraIssue` con `issueKey: "<KEY>"` e `comment: "🔍 PR aperta: <PR_URL>"`.
 
 ### 7. Notifica Slack
 
