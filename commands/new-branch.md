@@ -44,7 +44,7 @@ echo "$CONFLUENCE_PARENT_URL" | grep -oP '(?<=pages/)[0-9]+'
 
 Usa il tool MCP `searchConfluenceUsingCql` con:
 ```
-ancestor = <PARENT_PAGE_ID> AND (title ~ "<keyword1>" OR title ~ "<keyword2>" OR label = "<keyword1>")
+ancestor = <PARENT_PAGE_ID> AND (title ~ "<keyword1>" OR title ~ "<keyword2>" OR text ~ "<keyword1>")
 ```
 
 Se trova risultati, mostra all'utente i titoli e gli URL delle pagine trovate come contesto prima di iniziare. Se non trova nulla, prosegui in silenzio.

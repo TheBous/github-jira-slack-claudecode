@@ -38,22 +38,9 @@ Chiedi all'utente cosa vuole modificare (titolo, body, aggiunta/rimozione tag, f
 
 ### 5. Applica le modifiche
 
-Usa il tool MCP `updateConfluencePage` con il page ID e il contenuto aggiornato.
+Usa il tool MCP `updateConfluencePage` con il page ID e il contenuto aggiornato (`contentFormat: "html"`).
 
-Per modifiche ai tag (label), usa curl:
-```bash
-# Aggiunta label
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "https://<domain>/wiki/rest/api/content/<PAGE_ID>/label" \
-  -d '[{"prefix":"global","name":"<tag>"}]'
-
-# Rimozione label
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -X DELETE "https://<domain>/wiki/rest/api/content/<PAGE_ID>/label/<tag>"
-```
+Per modifiche ai tag: aggiorna direttamente la riga Tag nella tabella metadata nel body HTML.
 
 ### 6. Conferma
 

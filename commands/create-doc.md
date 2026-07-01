@@ -92,24 +92,13 @@ echo "$CONFLUENCE_PARENT_URL" | grep -oP '(?<=pages/)[0-9]+'   # → PAGE_ID
 ### 7. Pubblica su Confluence
 
 Usa il tool MCP `createConfluencePage` con:
-- `spaceKey`: estratto al passo 5
+- `spaceId`: SPACE_KEY estratto al passo 5
 - `parentId`: PAGE_ID estratto al passo 5
 - `title`: titolo confermato dall'utente
 - `body`: HTML composto al passo 6
-
-Poi aggiungi le label:
-```bash
-source "${CLAUDE_PLUGIN_DATA}/.env"
-DOMAIN=$(echo "$CONFLUENCE_PARENT_URL" | grep -oP 'https://[^/]+')
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "$DOMAIN/wiki/rest/api/content/<NEW_PAGE_ID>/label" \
-  -d '[{"prefix":"global","name":"<tag1>"},{"prefix":"global","name":"<tag2>"}]'
-```
+- `contentFormat`: `"html"`
 
 ### 8. Conferma
 
 Mostra all'utente:
 - Pagina creata: `<titolo>` → `<URL pagina>`
-- Label aggiunte: `<lista tag>`

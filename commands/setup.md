@@ -2,19 +2,17 @@
 description: Configura le credenziali Jira, Slack e Confluence per jira-git-sync
 ---
 
-Guida l'utente passo passo nella configurazione delle credenziali. Fai una domanda alla volta e aspetta la risposta.
+Guida l'utente passo passo nella configurazione. Fai una domanda alla volta e aspetta la risposta.
+
+**Nota**: le operazioni Jira e Confluence usano il MCP Atlassian Rovo già configurato in Claude Code — non servono credenziali API manuali.
 
 ## Passi
 
-1. **Jira Base URL** — chiedi l'URL base di Jira (es. `https://company.atlassian.net`).
+1. **Jira Base URL** — chiedi l'URL base di Jira (es. `https://company.atlassian.net`). Serve per costruire i link nei messaggi Slack.
 
-2. **Jira Email** — chiedi l'email con cui accede a Jira.
+2. **Slack Webhook URL** — spiega dove crearlo: `api.slack.com → Your Apps → Incoming Webhooks → Add New Webhook`, poi chiedi l'URL.
 
-3. **Jira API Token** — spiega dove generarlo: `id.atlassian.com → Security → Create and manage API tokens`, poi chiedi il token.
-
-4. **Slack Webhook URL** — spiega dove crearlo: `api.slack.com → Your Apps → Incoming Webhooks → Add New Webhook`, poi chiedi l'URL.
-
-5. **Confluence Parent URL** — chiedi l'URL della pagina Confluence che fungerà da cartella padre per la documentazione (es. `https://company.atlassian.net/wiki/spaces/TECH/pages/123456/Documentazione`). Questa pagina deve essere già esistente. Se l'utente non usa Confluence, può saltare questo passo lasciando vuoto.
+3. **Confluence Parent URL** — chiedi l'URL della pagina Confluence che fungerà da cartella padre per la documentazione (es. `https://company.atlassian.net/wiki/spaces/TECH/pages/123456/Documentazione`). Questa pagina deve essere già esistente. Se l'utente non usa Confluence, può saltare questo passo lasciando vuoto.
 
 5. **Transition IDs** — dopo aver raccolto Jira URL, email e token, esegui:
    ```bash
@@ -33,8 +31,6 @@ Crea la directory `${CLAUDE_PLUGIN_DATA}` se non esiste, poi scrivi il file `${C
 
 ```
 JIRA_BASE_URL=<valore>
-JIRA_EMAIL=<valore>
-JIRA_API_TOKEN=<valore>
 JIRA_IN_PROGRESS_ID=<valore>
 JIRA_IN_REVIEW_ID=<valore o stringa vuota>
 JIRA_IN_STAGING_ID=<valore>
