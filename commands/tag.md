@@ -61,25 +61,9 @@ Capture the release URL.
 
 ### 5. Jira transition and comment for each ticket
 
-For each Jira key found:
-
-```bash
-source "${CLAUDE_PLUGIN_DATA}/.env"
-
-# Transition to Done/Released
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/transitions" \
-  -d "{\"transition\":{\"id\":\"$JIRA_DONE_ID\"}}"
-
-# Comment
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/comment" \
-  -d "{\"body\":\"🚀 Deployed to production with tag \`<TAG>\`.\"}"
-```
+For each Jira key found, follow `references/jira-transition.md` (in the plugin root) with:
+- `<TRANSITION_ID>` = `$JIRA_DONE_ID`
+- `<COMMENT_TEXT>` = `"🚀 Deployed to production with tag \`<TAG>\`."`
 
 Run in sequence for all tickets found. If a ticket fails (e.g. already Done), log the error and continue.
 

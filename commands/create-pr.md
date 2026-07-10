@@ -130,15 +130,9 @@ curl -sf \
 
 ### 7. Jira transition and comment
 
-If there's a ticket and `JIRA_IN_REVIEW_ID` is configured and not empty:
-
-```bash
-source "${CLAUDE_PLUGIN_DATA}/.env"
-```
-
-Use the MCP tool `transitionJiraIssue` with `issueKey: "<KEY>"` and `transitionId: "$JIRA_IN_REVIEW_ID"`.
-
-Then use the MCP tool `addCommentToJiraIssue` with `issueKey: "<KEY>"` and `comment: "🔍 PR opened: <PR_URL>"`.
+If there's a ticket and `JIRA_IN_REVIEW_ID` is configured and not empty, follow `references/jira-transition.md` (in the plugin root) with:
+- `<TRANSITION_ID>` = `$JIRA_IN_REVIEW_ID`
+- `<COMMENT_TEXT>` = `"🔍 PR opened: <PR_URL>"`
 
 ### 8. Slack notification
 

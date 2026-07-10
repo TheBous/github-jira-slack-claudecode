@@ -60,14 +60,9 @@ If the branch already exists, warn the user and run `git checkout <branch-name>`
 
 ### 5. Jira transition (only if there's a ticket)
 
-Load the transition ID:
-```bash
-source "${CLAUDE_PLUGIN_DATA}/.env"
-```
-
-Use the MCP tool `transitionJiraIssue` with `issueKey: "<KEY>"` and `transitionId: "$JIRA_IN_PROGRESS_ID"`.
-
-Then use the MCP tool `addCommentToJiraIssue` with `issueKey: "<KEY>"` and `comment: "🌿 Branch \`<branch-name>\` created."`.
+Follow `references/jira-transition.md` (in the plugin root) with:
+- `<TRANSITION_ID>` = `$JIRA_IN_PROGRESS_ID`
+- `<COMMENT_TEXT>` = `"🌿 Branch \`<branch-name>\` created."`
 
 ### 6. Slack notification
 

@@ -69,32 +69,9 @@ curl -sf -X PUT -H "Authorization: Bearer $(gh auth token)" \
 
 ### 4. Jira transition and comment
 
-If there's a linked Jira ticket, always do both the transition and the comment — never merge a PR without leaving the Jira comment.
-
-```bash
-source "${CLAUDE_PLUGIN_DATA}/.env"
-```
-
-Use the MCP tool `transitionJiraIssue` with `issueKey: "<KEY>"` and `transitionId: "$JIRA_IN_STAGING_ID"`.
-
-Then use the MCP tool `addCommentToJiraIssue` with `issueKey: "<KEY>"` and `comment: "🔀 PR #<NUMBER> merged to main: <PR_URL>"`.
-
-**If either MCP tool call fails**, use this curl fallback:
-```bash
-source "${CLAUDE_PLUGIN_DATA}/.env"
-
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/transitions" \
-  -d "{\"transition\":{\"id\":\"$JIRA_IN_STAGING_ID\"}}"
-
-curl -sf -o /dev/null \
-  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/comment" \
-  -d "{\"body\":\"🔀 PR #<NUMBER> merged to main: <PR_URL>\"}"
-```
+If there's a linked Jira ticket, follow `references/jira-transition.md` (in the plugin root) with:
+- `<TRANSITION_ID>` = `$JIRA_IN_STAGING_ID`
+- `<COMMENT_TEXT>` = `"🔀 PR #<NUMBER> merged to main: <PR_URL>"`
 
 ### 5. Slack notification
 
