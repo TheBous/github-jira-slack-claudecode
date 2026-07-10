@@ -1,24 +1,24 @@
 ---
-description: Mergia una PR su main, transita il ticket Jira In Staging e notifica Slack
+description: Merge a PR to main, transition the Jira ticket to In Staging, and notify Slack
 ---
 
-## Obiettivo
+## Goal
 
-Selezionare e mergeare una PR su `main`, transitare il ticket Jira collegato In Staging, notificare Slack.
+Select and merge a PR into `main`, transition the linked Jira ticket to In Staging, notify Slack.
 
-## Passi
+## Steps
 
-### 1. Identifica la PR da mergeare
+### 1. Identify the PR to merge
 
-Se l'utente ha specificato un numero o URL di PR nell'invocazione del comando, usa quello.
+If the user specified a PR number or URL when invoking the command, use that.
 
-Altrimenti, elenca le PR aperte create dall'utente corrente:
+Otherwise, list the open PRs created by the current user:
 ```bash
 gh pr list --author @me --state open --json number,title,headRefName,createdAt \
   --template '{{range .}}#{{.number}} | {{.headRefName}} | {{.title}}{{"\n"}}{{end}}'
 ```
 
-**Se il comando fallisce con un errore TLS/certificato**, usa questo fallback:
+**If the command fails with a TLS/certificate error**, use this fallback:
 ```bash
 OWNER_REPO=$(git remote get-url origin | sed -E 's#.*[:/]([^/]+/[^/]+)(\.git)?$#\1#')
 ME=$(curl -sf -H "Authorization: Bearer $(gh auth token)" https://api.github.com/user | jq -r '.login')
@@ -27,106 +27,106 @@ curl -sf -H "Authorization: Bearer $(gh auth token)" \
   | jq --arg me "$ME" '[.[] | select(.user.login == $me)] | .[] | {number, headRefName: .head.ref, title}'
 ```
 
-Mostra la lista all'utente e chiedi quale PR vuole mergeare. Attendi la risposta.
+Show the list to the user and ask which PR they want to merge. Wait for the reply.
 
-### 2. Recupera dettagli della PR
+### 2. Fetch PR details
 
 ```bash
-gh pr view <NUMERO> --json number,title,headRefName,url,body
+gh pr view <NUMBER> --json number,title,headRefName,url,body
 ```
 
-**Fallback TLS**:
+**TLS fallback**:
 ```bash
 curl -sf -H "Authorization: Bearer $(gh auth token)" \
-  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMERO>" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMBER>" \
   | jq '{number, title, headRefName: .head.ref, url: .html_url, body}'
 ```
 
-Estrai:
-- `headRefName`: il branch della PR
-- `url`: URL della PR
-- Jira key dal branch name (pattern `[A-Z]+-[0-9]+`)
+Extract:
+- `headRefName`: the PR's branch
+- `url`: the PR URL
+- Jira key from the branch name (pattern `[A-Z]+-[0-9]+`)
 
-### 3. Mergia la PR
+### 3. Merge the PR
 
-Chiedi all'utente quale tipo di merge preferisce (default: squash):
-- **Squash** (default): commits unificati, history pulita
-- **Merge**: merge commit classico
-- **Rebase**: commits lineari
+Ask the user which merge type they prefer (default: squash):
+- **Squash** (default): commits unified, clean history
+- **Merge**: classic merge commit
+- **Rebase**: linear commits
 
 ```bash
-gh pr merge <NUMERO> --squash --auto
-# oppure --merge o --rebase in base alla scelta
+gh pr merge <NUMBER> --squash --auto
+# or --merge or --rebase depending on the choice
 ```
 
-**Fallback TLS**:
+**TLS fallback**:
 ```bash
 curl -sf -X PUT -H "Authorization: Bearer $(gh auth token)" \
-  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMERO>/merge" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMBER>/merge" \
   -d '{"merge_method":"squash"}'
-# merge_method: "squash" | "merge" | "rebase" in base alla scelta
+# merge_method: "squash" | "merge" | "rebase" depending on the choice
 ```
 
-### 4. Transizione e commento Jira
+### 4. Jira transition and comment
 
-Se c'è un ticket Jira collegato:
+If there's a linked Jira ticket:
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
 ```
 
-Usa il tool MCP `transitionJiraIssue` con `issueKey: "<KEY>"` e `transitionId: "$JIRA_IN_STAGING_ID"`.
+Use the MCP tool `transitionJiraIssue` with `issueKey: "<KEY>"` and `transitionId: "$JIRA_IN_STAGING_ID"`.
 
-Poi usa il tool MCP `addCommentToJiraIssue` con `issueKey: "<KEY>"` e `comment: "🔀 PR #<NUMERO> mergiata su main: <PR_URL>"`.
+Then use the MCP tool `addCommentToJiraIssue` with `issueKey: "<KEY>"` and `comment: "🔀 PR #<NUMBER> merged to main: <PR_URL>"`.
 
-### 5. Notifica Slack
+### 5. Slack notification
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
 MERGED_BY=$(git config user.name 2>/dev/null || echo "unknown")
 curl -sf -o /dev/null -X POST "$SLACK_WEBHOOK_URL" \
   -H "Content-type: application/json" \
-  -d "{\"text\":\"🔀 PR #<NUMERO> mergiata su main\n🎫 <$JIRA_BASE_URL/browse/<KEY>|<KEY>> → *In Staging*\n👤 $MERGED_BY\n🔗 <PR_URL>\"}"
+  -d "{\"text\":\"🔀 PR #<NUMBER> merged to main\n🎫 <$JIRA_BASE_URL/browse/<KEY>|<KEY>> → *In Staging*\n👤 $MERGED_BY\n🔗 <PR_URL>\"}"
 ```
 
-Se non c'è ticket Jira, il messaggio Slack è: `🔀 PR #<NUMERO> mergiata su main — <TITOLO_PR>`
+If there's no Jira ticket, the Slack message is: `🔀 PR #<NUMBER> merged to main — <PR_TITLE>`
 
-### 6. Aggiornamento documentazione Confluence (se configurato)
+### 6. Confluence documentation update (if configured)
 
-Se `CONFLUENCE_PARENT_URL` è nel `.env` e non è vuoto:
+If `CONFLUENCE_PARENT_URL` is in `.env` and not empty:
 
-Recupera i file modificati nel branch mergiato:
+Fetch the files changed in the merged branch:
 ```bash
 git diff main...<BRANCH_NAME> --name-only
 ```
 
-Estrai il `PARENT_PAGE_ID` da `CONFLUENCE_PARENT_URL`:
+Extract `PARENT_PAGE_ID` from `CONFLUENCE_PARENT_URL`:
 ```bash
 echo "$CONFLUENCE_PARENT_URL" | grep -oP '(?<=pages/)[0-9]+'
 ```
 
-Usa il tool MCP `searchConfluenceUsingCql` cercando pagine che menzionano i file cambiati:
+Use the MCP tool `searchConfluenceUsingCql` to search for pages mentioning the changed files:
 ```
 ancestor = <PARENT_PAGE_ID> AND text ~ "<file1>" OR text ~ "<file2>"
 ```
 
-Se trova candidati, mostra all'utente:
+If candidates are found, show the user:
 ```
-📄 Queste pagine Confluence potrebbero necessitare aggiornamento:
-- <titolo1>: <url1>
-- <titolo2>: <url2>
+📄 These Confluence pages might need updating:
+- <title1>: <url1>
+- <title2>: <url2>
 
-Vuoi aggiornare qualcuna di queste? (sì/no/elenca quali)
+Do you want to update any of these? (yes/no/list which ones)
 ```
 
-Per ogni pagina confermata, chiedi all'utente cosa aggiornare e usa il tool MCP `updateConfluencePage` con il contenuto modificato.
+For each confirmed page, ask the user what to update and use the MCP tool `updateConfluencePage` with the modified content.
 
-Se non trova candidati o l'utente rifiuta, prosegui silenziosamente.
+If no candidates are found or the user declines, proceed silently.
 
-### 7. Conferma
+### 7. Confirmation
 
-Mostra all'utente:
-- PR #`<NUMERO>` mergiata
-- Ticket `<KEY>` → In Staging (se applicabile)
-- Slack: notificato
-- Documentazione aggiornata: `<lista pagine aggiornate>` (se applicabile)
+Show the user:
+- PR #`<NUMBER>` merged
+- Ticket `<KEY>` → In Staging (if applicable)
+- Slack: notified
+- Documentation updated: `<list of updated pages>` (if applicable)

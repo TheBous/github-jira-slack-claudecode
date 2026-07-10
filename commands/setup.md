@@ -1,42 +1,42 @@
 ---
-description: Configura le credenziali Jira, Slack e Confluence per jira-git-sync
+description: Configure Jira, Slack, and Confluence credentials for jira-git-sync
 ---
 
-Guida l'utente passo passo nella configurazione. Fai una domanda alla volta e aspetta la risposta.
+Guide the user step by step through the setup. Ask one question at a time and wait for the answer.
 
-**Nota**: le operazioni Jira e Confluence usano il MCP Atlassian Rovo già configurato in Claude Code — non servono credenziali API manuali.
+**Note**: Jira and Confluence operations use the Atlassian Rovo MCP already configured in Claude Code — no manual API credentials needed.
 
-## Passi
+## Steps
 
-1. **Jira Base URL** — chiedi l'URL base di Jira (es. `https://company.atlassian.net`). Serve per costruire i link nei messaggi Slack.
+1. **Jira Base URL** — ask for the Jira base URL (e.g. `https://company.atlassian.net`). Needed to build links in Slack messages.
 
-2. **Slack Webhook URL** — spiega dove crearlo: `api.slack.com → Your Apps → Incoming Webhooks → Add New Webhook`, poi chiedi l'URL.
+2. **Slack Webhook URL** — explain where to create it: `api.slack.com → Your Apps → Incoming Webhooks → Add New Webhook`, then ask for the URL.
 
-3. **Confluence Parent URL** — chiedi l'URL della pagina Confluence che fungerà da cartella padre per la documentazione (es. `https://company.atlassian.net/wiki/spaces/TECH/pages/123456/Documentazione`). Questa pagina deve essere già esistente. Se l'utente non usa Confluence, può saltare questo passo lasciando vuoto.
+3. **Confluence Parent URL** — ask for the URL of the Confluence page that will act as the parent folder for documentation (e.g. `https://company.atlassian.net/wiki/spaces/TECH/pages/123456/Documentation`). This page must already exist. If the user doesn't use Confluence, they can skip this step by leaving it blank.
 
-5. **Transition IDs** — dopo aver raccolto Jira URL, email e token, esegui:
+5. **Transition IDs** — after collecting the Jira URL, email, and token, run:
    ```bash
-   curl -s -u "<EMAIL>:<TOKEN>" "<BASE_URL>/rest/api/2/issue/<QUALSIASI_TICKET>/transitions" \
+   curl -s -u "<EMAIL>:<TOKEN>" "<BASE_URL>/rest/api/2/issue/<ANY_TICKET>/transitions" \
      | python3 -m json.tool | grep -E '"id"|"name"'
    ```
-   Chiedi all'utente di indicare un ticket qualunque su cui testare, esegui il comando con i dati reali, mostra la lista degli stati, poi chiedi di scegliere gli ID per:
-   - **In Progress** (quando crea un branch)
-   - **In Review** (quando crea una PR) — se non esiste salta
-   - **In Staging** (quando mergia la PR)
-   - **Done / Released** (quando tagga per produzione)
+   Ask the user for any ticket to test against, run the command with the real data, show the list of statuses, then ask them to pick the IDs for:
+   - **In Progress** (when a branch is created)
+   - **In Review** (when a PR is created) — skip if it doesn't exist
+   - **In Staging** (when the PR is merged)
+   - **Done / Released** (when tagging for production)
 
-## Salvataggio
+## Saving
 
-Crea la directory `${CLAUDE_PLUGIN_DATA}` se non esiste, poi scrivi il file `${CLAUDE_PLUGIN_DATA}/.env`:
+Create the `${CLAUDE_PLUGIN_DATA}` directory if it doesn't exist, then write the file `${CLAUDE_PLUGIN_DATA}/.env`:
 
 ```
-JIRA_BASE_URL=<valore>
-JIRA_IN_PROGRESS_ID=<valore>
-JIRA_IN_REVIEW_ID=<valore o stringa vuota>
-JIRA_IN_STAGING_ID=<valore>
-JIRA_DONE_ID=<valore>
-SLACK_WEBHOOK_URL=<valore>
-CONFLUENCE_PARENT_URL=<valore o stringa vuota>
+JIRA_BASE_URL=<value>
+JIRA_IN_PROGRESS_ID=<value>
+JIRA_IN_REVIEW_ID=<value or empty string>
+JIRA_IN_STAGING_ID=<value>
+JIRA_DONE_ID=<value>
+SLACK_WEBHOOK_URL=<value>
+CONFLUENCE_PARENT_URL=<value or empty string>
 ```
 
-Esegui `mkdir -p "${CLAUDE_PLUGIN_DATA}"` prima di scrivere il file. Conferma all'utente che la configurazione è stata salvata e suggerisci di provare `/jira-git-sync:new-branch`.
+Run `mkdir -p "${CLAUDE_PLUGIN_DATA}"` before writing the file. Confirm to the user that the configuration has been saved and suggest trying `/jira-git-sync:new-branch`.

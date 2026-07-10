@@ -1,48 +1,48 @@
 ---
-description: Aggiorna una pagina di documentazione esistente in Confluence
+description: Update an existing documentation page in Confluence
 ---
 
-## Obiettivo
+## Goal
 
-Trovare e aggiornare una pagina di documentazione in Confluence, identificata per URL o titolo.
+Find and update a documentation page in Confluence, identified by URL or title.
 
-## Passi
+## Steps
 
-### 1. Carica le credenziali
+### 1. Load the credentials
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
 ```
 
-Se il file non esiste o manca `CONFLUENCE_PARENT_URL`, di' all'utente di eseguire prima `/jira-git-sync:setup`.
+If the file doesn't exist or `CONFLUENCE_PARENT_URL` is missing, tell the user to run `/jira-git-sync:setup` first.
 
-### 2. Identifica la pagina
+### 2. Identify the page
 
-Chiedi all'utente: "URL o titolo della pagina da aggiornare?"
+Ask the user: "URL or title of the page to update?"
 
-**Se URL**: estrai il page ID con `echo "<URL>" | grep -oP '(?<=pages/)[0-9]+'`
+**If URL**: extract the page ID with `echo "<URL>" | grep -oP '(?<=pages/)[0-9]+'`
 
-**Se titolo**: usa il tool MCP `searchConfluenceUsingCql` con:
+**If title**: use the MCP tool `searchConfluenceUsingCql` with:
 ```
-title = "<titolo>" AND ancestor = <PARENT_PAGE_ID>
+title = "<title>" AND ancestor = <PARENT_PAGE_ID>
 ```
-dove `PARENT_PAGE_ID` è estratto da `CONFLUENCE_PARENT_URL`. Se più risultati, mostrali e chiedi quale.
+where `PARENT_PAGE_ID` is extracted from `CONFLUENCE_PARENT_URL`. If there are multiple results, show them and ask which one.
 
-### 3. Recupera il contenuto attuale
+### 3. Fetch the current content
 
-Usa il tool MCP `getConfluencePage` con il page ID trovato. Mostra all'utente il titolo e il body attuale.
+Use the MCP tool `getConfluencePage` with the page ID found. Show the user the current title and body.
 
-### 4. Raccogli le modifiche
+### 4. Gather the changes
 
-Chiedi all'utente cosa vuole modificare (titolo, body, aggiunta/rimozione tag, file di riferimento).
+Ask the user what they want to change (title, body, adding/removing tags, reference files).
 
-### 5. Applica le modifiche
+### 5. Apply the changes
 
-Usa il tool MCP `updateConfluencePage` con il page ID e il contenuto aggiornato (`contentFormat: "html"`).
+Use the MCP tool `updateConfluencePage` with the page ID and the updated content (`contentFormat: "html"`).
 
-Per modifiche ai tag: aggiorna direttamente la riga Tag nella tabella metadata nel body HTML.
+For tag changes: update the Tags row directly in the metadata table in the HTML body.
 
-### 6. Conferma
+### 6. Confirmation
 
-Mostra all'utente:
-- Pagina aggiornata: `<titolo>` → `<URL pagina>`
+Show the user:
+- Page updated: `<title>` → `<page URL>`

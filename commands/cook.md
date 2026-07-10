@@ -1,93 +1,93 @@
 ---
-description: Sviluppa una feature o fix sul branch corrente, runna i test e aggiorna la documentazione
+description: Develop a feature or fix on the current branch, run tests, and update documentation
 ---
 
-## Obiettivo
+## Goal
 
-Implementare una feature o fix partendo dal contesto del branch/ticket corrente, garantendo che i test passino e la documentazione sia aggiornata.
+Implement a feature or fix starting from the context of the current branch/ticket, ensuring tests pass and documentation is up to date.
 
-## Passi
+## Steps
 
-### 1. Raccogli il contesto
+### 1. Gather context
 
-Estrai la Jira key dal branch corrente (pattern `[A-Z]+-[0-9]+`):
+Extract the Jira key from the current branch (pattern `[A-Z]+-[0-9]+`):
 ```bash
 git branch --show-current
 ```
 
-Se trovata, recupera titolo e descrizione del ticket con il tool MCP `getJiraIssue` con `issueKey: "<KEY>"` e `fields: ["summary", "description"]`.
+If found, fetch the ticket's title and description with the MCP tool `getJiraIssue` using `issueKey: "<KEY>"` and `fields: ["summary", "description"]`.
 
-Mostra all'utente:
+Show the user:
 ```
-🎫 Ticket: <KEY> — <titolo>
-📋 <descrizione troncata a 300 caratteri>
+🎫 Ticket: <KEY> — <title>
+📋 <description truncated to 300 characters>
 
-È questo che vuoi implementare? Vuoi aggiungere dettagli o correggere la direzione?
-```
-
-Attendi risposta e integra eventuali precisazioni prima di procedere.
-
-### 2. Scegli il flusso di sviluppo
-
-Chiedi all'utente:
-```
-Come vuoi approcciare questo task?
-
-1. 🧠 Brainstorming — esplora opzioni e approcci prima di scrivere codice
-2. 🔥 Grilling — sessione di domande per definire i requisiti nel dettaglio
-3. ⚡ Diretto — implementa subito senza un flusso preliminare
+Is this what you want to implement? Do you want to add details or correct the direction?
 ```
 
-- Se sceglie **1**: invoca la skill `superpowers:brainstorming` prima di procedere
-- Se sceglie **2**: invoca la skill `grilling` prima di procedere
-- Se sceglie **3**: vai direttamente al passo 3
+Wait for a reply and incorporate any clarifications before proceeding.
 
-### 3. Implementa
+### 2. Choose the development flow
 
-Leggi il codice rilevante nel repository per capire il contesto prima di scrivere. Implementa la feature o fix rispettando le convenzioni del codebase esistente.
+Ask the user:
+```
+How do you want to approach this task?
 
-Dopo ogni modifica significativa, mostra brevemente cosa hai fatto prima di continuare.
+1. 🧠 Brainstorming — explore options and approaches before writing code
+2. 🔥 Grilling — a Q&A session to nail down requirements in detail
+3. ⚡ Direct — implement right away with no preliminary flow
+```
 
-### 4. Runna i test
+- If they choose **1**: invoke the `superpowers:brainstorming` skill before proceeding
+- If they choose **2**: invoke the `grilling` skill before proceeding
+- If they choose **3**: go directly to step 3
 
-Leggi `references/run-tests.md` (nella root del plugin) e segui le istruzioni per trovare e runnare i test/lint/check del progetto.
+### 3. Implement
 
-### 5. Aggiorna la documentazione
+Read the relevant code in the repository to understand the context before writing. Implement the feature or fix following the existing codebase's conventions.
 
-Recupera i file modificati:
+After each significant change, briefly show what you did before continuing.
+
+### 4. Run the tests
+
+Read `references/run-tests.md` (in the plugin root) and follow the instructions to find and run the project's tests/lint/checks.
+
+### 5. Update documentation
+
+Fetch the changed files:
 ```bash
 git diff HEAD --name-only
 ```
 
-**Docs locale** — se esiste `docs/`:
+**Local docs** — if `docs/` exists:
 ```bash
-ls docs/ 2>/dev/null && grep -rl "<file-modificato>" docs/ 2>/dev/null
+ls docs/ 2>/dev/null && grep -rl "<changed-file>" docs/ 2>/dev/null
 ```
 
-**Confluence** — se `CONFLUENCE_PARENT_URL` è configurato nel `.env`:
+**Confluence** — if `CONFLUENCE_PARENT_URL` is configured in `.env`:
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
 ```
-Estrai il `PARENT_PAGE_ID` e usa il tool MCP `searchConfluenceUsingCql`:
+Extract `PARENT_PAGE_ID` and use the MCP tool `searchConfluenceUsingCql`:
 ```
 ancestor = <PARENT_PAGE_ID> AND (text ~ "<file1>" OR text ~ "<file2>")
 ```
 
-Se trova candidati (locali o Confluence), mostra:
+If candidates are found (local or Confluence), show:
 ```
-📄 Documentazione da aggiornare:
-- [locale] docs/auth.md
-- [Confluence] <titolo> → <url>
+📄 Documentation to update:
+- [local] docs/auth.md
+- [Confluence] <title> → <url>
 
-Vuoi aggiornarli? (sì/no/elenca quali)
+Do you want to update them? (yes/no/list which ones)
 ```
 
-Attendi conferma. Per ogni doc confermato, aggiorna il contenuto rilevante riflettendo i cambi implementati.
+Wait for confirmation. For each confirmed doc, update the relevant content to reflect the implemented changes.
 
-### 6. Conferma finale
+### 6. Final confirmation
 
-Mostra all'utente:
-- ✅ Feature/fix implementata
-- ✅ Test: `<lista script>` — tutti verdi
-- ✅ Documentazione aggiornata: `<lista file/pagine>` (se applicabile)
-- → Suggerisci il prossimo step: `/jira-git-sync:create-pr`
+Show the user:
+- ✅ Feature/fix implemented
+- ✅ Tests: `<list of scripts>` — all green
+- ✅ Documentation updated: `<list of files/pages>` (if applicable)
+- → Suggest the next step: `/jira-git-sync:create-pr`

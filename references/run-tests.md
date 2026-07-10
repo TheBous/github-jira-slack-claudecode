@@ -1,8 +1,8 @@
-# Come runnare i test del progetto
+# How to run the project's tests
 
-Cerca i test runner disponibili nel progetto in questo ordine:
+Look for available test runners in the project in this order:
 
-**JavaScript/TypeScript** — leggi `package.json` e raccogli tutti gli script il cui nome contiene `test`, `lint`, `check`, o `typecheck`:
+**JavaScript/TypeScript** — read `package.json` and collect all scripts whose name contains `test`, `lint`, `check`, or `typecheck`:
 ```bash
 cat package.json | python3 -c "
 import sys, json
@@ -13,13 +13,13 @@ for k, v in scripts.items():
 "
 ```
 
-**Fallback** — se non c'è `package.json`, controlla in ordine:
-- `Makefile`: cerca target `test`, `lint`, `check` con `grep -E '^(test|lint|check):' Makefile`
-- `pyproject.toml` / `setup.py`: usa `pytest`
-- `go.mod`: usa `go test ./...`
+**Fallback** — if there's no `package.json`, check in order:
+- `Makefile`: look for `test`, `lint`, `check` targets with `grep -E '^(test|lint|check):' Makefile`
+- `pyproject.toml` / `setup.py`: use `pytest`
+- `go.mod`: use `go test ./...`
 
-Runna tutti gli script trovati. Se uno fallisce:
-- Analizza l'output dell'errore
-- Correggi il codice
-- Riruna solo lo script fallito
-- Ripeti fino a quando passa (max 3 tentativi per script, poi riporta il fallimento all'utente)
+Run all the scripts found. If one fails:
+- Analyze the error output
+- Fix the code
+- Rerun only the failed script
+- Repeat until it passes (max 3 attempts per script, then report the failure to the user)

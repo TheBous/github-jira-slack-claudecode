@@ -1,88 +1,88 @@
 ---
-description: Crea un nuovo branch partendo da un task Jira, sposta il task In Progress e notifica Slack
+description: Create a new branch from a Jira task, move the task to In Progress, and notify Slack
 ---
 
-## Obiettivo
+## Goal
 
-Creare un branch git collegato a un ticket Jira, transitare il ticket In Progress, notificare Slack.
+Create a git branch linked to a Jira ticket, transition the ticket to In Progress, notify Slack.
 
-## Passi
+## Steps
 
-### 1. Raccogli input
+### 1. Gather input
 
-Chiedi all'utente: "Nome del branch o URL/ID del ticket Jira?"
+Ask the user: "Branch name or Jira ticket URL/ID?"
 
-Accetta:
-- URL Jira completo (es. `https://company.atlassian.net/browse/DC-443`)
-- Ticket key (es. `DC-443` o `dc-443`)
-- Nome branch libero (es. `feature/my-thing`) — in questo caso salta i passi Jira
+Accept:
+- Full Jira URL (e.g. `https://company.atlassian.net/browse/DC-443`)
+- Ticket key (e.g. `DC-443` or `dc-443`)
+- Free-form branch name (e.g. `feature/my-thing`) — in this case skip the Jira steps
 
-### 2. Se input è un ticket Jira
+### 2. If input is a Jira ticket
 
-Carica le credenziali:
+Load the credentials:
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
 ```
-Se il file non esiste, dì all'utente di eseguire prima `/jira-git-sync:setup`.
+If the file doesn't exist, tell the user to run `/jira-git-sync:setup` first.
 
-Estrai la key (es. `DC-443`) dall'URL o dall'input. Poi recupera il titolo del ticket usando il tool MCP `getJiraIssue` con `issueKey: "<KEY>"` e `fields: ["summary"]`.
+Extract the key (e.g. `DC-443`) from the URL or input. Then fetch the ticket title using the MCP tool `getJiraIssue` with `issueKey: "<KEY>"` and `fields: ["summary"]`.
 
-Costruisci il nome del branch: `feature/<key-lowercase>-<titolo-slugificato>`.
-- Slugify: lowercase, spazi e caratteri speciali → `-`, max 50 caratteri dopo il prefisso.
-- Esempio: `DC-443` + "Implementa login OAuth" → `feature/dc-443-implementa-login-oauth`
+Build the branch name: `feature/<key-lowercase>-<slugified-title>`.
+- Slugify: lowercase, spaces and special characters → `-`, max 50 characters after the prefix.
+- Example: `DC-443` + "Implement OAuth login" → `feature/dc-443-implement-oauth-login`
 
-Mostra il nome proposto e chiedi conferma. L'utente può modificarlo.
+Show the proposed name and ask for confirmation. The user can edit it.
 
-### 3. Cerca documentazione rilevante (solo se c'è un ticket Jira)
+### 3. Search for relevant documentation (only if there's a Jira ticket)
 
-Se `CONFLUENCE_PARENT_URL` è configurato nel `.env`:
+If `CONFLUENCE_PARENT_URL` is configured in `.env`:
 
-Estrai 3-5 parole chiave significative da titolo e descrizione del ticket (escludi articoli, verbi comuni, parole di rumore). Estrai il `PARENT_PAGE_ID` da `CONFLUENCE_PARENT_URL` con:
+Extract 3-5 meaningful keywords from the ticket's title and description (exclude articles, common verbs, noise words). Extract `PARENT_PAGE_ID` from `CONFLUENCE_PARENT_URL` with:
 ```bash
 echo "$CONFLUENCE_PARENT_URL" | grep -oP '(?<=pages/)[0-9]+'
 ```
 
-Usa il tool MCP `searchConfluenceUsingCql` con:
+Use the MCP tool `searchConfluenceUsingCql` with:
 ```
 ancestor = <PARENT_PAGE_ID> AND (title ~ "<keyword1>" OR title ~ "<keyword2>" OR text ~ "<keyword1>")
 ```
 
-Se trova risultati, mostra all'utente i titoli e gli URL delle pagine trovate come contesto prima di iniziare. Se non trova nulla, prosegui in silenzio.
+If results are found, show the user the titles and URLs of the pages found as context before starting. If nothing is found, proceed silently.
 
-### 4. Crea il branch e pushalo
+### 4. Create and push the branch
 
 ```bash
-git checkout -b <nome-branch>
-git push -u origin <nome-branch>
+git checkout -b <branch-name>
+git push -u origin <branch-name>
 ```
 
-Se il branch esiste già, avvisa l'utente e fai `git checkout <nome-branch>` seguito da `git push -u origin <nome-branch>`.
+If the branch already exists, warn the user and run `git checkout <branch-name>` followed by `git push -u origin <branch-name>`.
 
-### 5. Transizione Jira (solo se c'è un ticket)
+### 5. Jira transition (only if there's a ticket)
 
-Carica l'ID di transizione:
+Load the transition ID:
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
 ```
 
-Usa il tool MCP `transitionJiraIssue` con `issueKey: "<KEY>"` e `transitionId: "$JIRA_IN_PROGRESS_ID"`.
+Use the MCP tool `transitionJiraIssue` with `issueKey: "<KEY>"` and `transitionId: "$JIRA_IN_PROGRESS_ID"`.
 
-Poi usa il tool MCP `addCommentToJiraIssue` con `issueKey: "<KEY>"` e `comment: "🌿 Branch \`<nome-branch>\` creato."`.
+Then use the MCP tool `addCommentToJiraIssue` with `issueKey: "<KEY>"` and `comment: "🌿 Branch \`<branch-name>\` created."`.
 
-### 6. Notifica Slack
+### 6. Slack notification
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
 curl -sf -o /dev/null -X POST "$SLACK_WEBHOOK_URL" \
   -H "Content-type: application/json" \
-  -d "{\"text\":\"🌿 Nuovo branch: \`<nome-branch>\`\n🎫 <$JIRA_BASE_URL/browse/<KEY>|<KEY>> → *In Progress*\"}"
+  -d "{\"text\":\"🌿 New branch: \`<branch-name>\`\n🎫 <$JIRA_BASE_URL/browse/<KEY>|<KEY>> → *In Progress*\"}"
 ```
 
-Se non c'era ticket Jira, il messaggio Slack è solo: `🌿 Nuovo branch: \`<nome-branch>\``
+If there was no Jira ticket, the Slack message is just: `🌿 New branch: \`<branch-name>\``
 
-### 7. Conferma
+### 7. Confirmation
 
-Mostra all'utente:
-- Branch creato: `<nome-branch>`
-- Ticket transitato: `<KEY>` → In Progress (se applicabile)
-- Slack: notificato
+Show the user:
+- Branch created: `<branch-name>`
+- Ticket transitioned: `<KEY>` → In Progress (if applicable)
+- Slack: notified

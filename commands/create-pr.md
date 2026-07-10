@@ -1,67 +1,67 @@
 ---
-description: Crea una PR su GitHub verso main, commenta su Jira e notifica Slack
+description: Create a PR on GitHub against main, comment on Jira, and notify Slack
 ---
 
-## Obiettivo
+## Goal
 
-Creare una Pull Request per il branch corrente verso `main`, generando automaticamente titolo e descrizione dal ticket Jira e dalle differenze col branch.
+Create a Pull Request for the current branch against `main`, automatically generating the title and description from the Jira ticket and the branch diff.
 
-## Passi
+## Steps
 
-### 1. Verifica stato
+### 1. Check status
 
 ```bash
 git branch --show-current
 git status --short
 ```
 
-Se ci sono modifiche non committate, avvisa l'utente e chiedi se vuole procedere ugualmente.
+If there are uncommitted changes, warn the user and ask if they want to proceed anyway.
 
-Verifica che il branch sia pushato su origin:
+Verify the branch is pushed to origin:
 ```bash
 git ls-remote --exit-code origin "$(git branch --show-current)" 2>/dev/null || echo "NOT_PUSHED"
 ```
 
-Se non pushato:
+If not pushed:
 ```bash
 git push -u origin "$(git branch --show-current)"
 ```
 
-### 2. Estrai ticket Jira e recupera i dettagli
+### 2. Extract the Jira ticket and fetch details
 
-Dal nome del branch, cerca un pattern `[A-Z]+-[0-9]+` (es. `dc-443` → `DC-443`).
+From the branch name, look for a pattern `[A-Z]+-[0-9]+` (e.g. `dc-443` → `DC-443`).
 
-Se trovato, recupera titolo e descrizione del ticket usando il tool MCP `getJiraIssue` con `issueKey: "<KEY>"` e `fields: ["summary", "description"]`.
+If found, fetch the ticket's title and description using the MCP tool `getJiraIssue` with `issueKey: "<KEY>"` and `fields: ["summary", "description"]`.
 
-### 3. Analizza le differenze col branch base
+### 3. Analyze the diff against the base branch
 
-Recupera il diff completo rispetto a main:
+Fetch the full diff against main:
 ```bash
 git diff main...HEAD --stat
 git log main..HEAD --pretty=format:"%s" --no-merges
 git diff main...HEAD -- . ':(exclude)*.lock' ':(exclude)package-lock.json'
 ```
 
-Analizza il diff per identificare:
-- Quali file sono stati aggiunti, modificati, rimossi
-- Il tipo di cambiamento (bug fix, nuova feature, refactoring, ecc.)
-- Se ci sono breaking changes
-- Se sono stati aggiunti test
+Analyze the diff to identify:
+- Which files were added, modified, removed
+- The type of change (bug fix, new feature, refactoring, etc.)
+- Whether there are breaking changes
+- Whether tests were added
 
-### 4. Genera titolo e descrizione automaticamente
+### 4. Auto-generate title and description
 
-**Titolo**: `[<KEY>] <titolo del ticket Jira>` — se non c'è ticket, usa il titolo del commit più recente.
+**Title**: `[<KEY>] <Jira ticket title>` — if there's no ticket, use the most recent commit title.
 
-**Descrizione**: compila il seguente template basandoti sull'analisi del diff e sui dettagli del ticket Jira. Non lasciare sezioni con placeholder generici — ogni sezione deve riflettere le modifiche reali rilevate nel diff.
+**Description**: fill in the following template based on the diff analysis and Jira ticket details. Don't leave sections with generic placeholders — each section must reflect the actual changes found in the diff.
 
 ```markdown
 ## Summary
-[1-3 frasi che spiegano cosa fa questa PR e perché, basate sul titolo/descrizione Jira e sul diff]
+[1-3 sentences explaining what this PR does and why, based on the Jira title/description and the diff]
 
 ## Changes
-- [Lista puntata delle modifiche specifiche rilevate nel diff]
-- [Raggruppa i cambiamenti correlati]
-- [Specifica cosa è stato aggiunto, modificato, o rimosso]
+- [Bulleted list of specific changes found in the diff]
+- [Group related changes together]
+- [Specify what was added, modified, or removed]
 
 ## Type of Change
 - [ ] Bug fix (non-breaking change which fixes an issue)
@@ -72,73 +72,73 @@ Analizza il diff per identificare:
 - [ ] Refactoring (no functional changes)
 
 ## Testing
-- [ ] [Descrivi il testing eseguito, rilevato dai file di test nel diff]
-- [ ] [Elenca eventuali nuovi test aggiunti]
-- [ ] [Note su eventuali step di test manuali]
+- [ ] [Describe the testing performed, detected from test files in the diff]
+- [ ] [List any new tests added]
+- [ ] [Notes on any manual testing steps]
 
 ## Breaking Changes
-[Se applicabile, descrivi breaking changes e migration steps; altrimenti scrivi "None"]
+[If applicable, describe breaking changes and migration steps; otherwise write "None"]
 
 ## Related Issues
 Fixes <JIRA_BASE_URL>/browse/<KEY>
 
 ## Screenshots
-[Se applicabile, aggiungi screenshot; altrimenti rimuovi questa sezione]
+[If applicable, add screenshots; otherwise remove this section]
 
 ## Additional Context
-[Qualsiasi altro contesto utile per i reviewer, oppure rimuovi questa sezione se non necessario]
+[Any other context useful for reviewers, or remove this section if not needed]
 ```
 
-Spunta automaticamente il checkbox corretto in "Type of Change" in base al diff analizzato.
+Automatically check the correct checkbox in "Type of Change" based on the analyzed diff.
 
-### 5. Crea la PR
+### 5. Create the PR
 
 ```bash
 gh pr create \
   --base main \
-  --title "<titolo generato>" \
-  --body "<descrizione generata>"
+  --title "<generated title>" \
+  --body "<generated description>"
 ```
 
-Cattura l'URL della PR dall'output.
+Capture the PR URL from the output.
 
-**Se il comando fallisce con un errore TLS/certificato** (es. `tls: failed to verify certificate: x509: ...`), usa questo fallback:
+**If the command fails with a TLS/certificate error** (e.g. `tls: failed to verify certificate: x509: ...`), use this fallback:
 ```bash
 OWNER_REPO=$(git remote get-url origin | sed -E 's#.*[:/]([^/]+/[^/]+)(\.git)?$#\1#')
 curl -sf \
   -H "Authorization: Bearer $(gh auth token)" \
   -H "Accept: application/vnd.github+json" \
   -X POST "https://api.github.com/repos/$OWNER_REPO/pulls" \
-  -d "{\"title\":\"<titolo generato>\",\"body\":\"<descrizione generata>\",\"head\":\"$(git branch --show-current)\",\"base\":\"main\"}" \
+  -d "{\"title\":\"<generated title>\",\"body\":\"<generated description>\",\"head\":\"$(git branch --show-current)\",\"base\":\"main\"}" \
   | jq '{number, url: .html_url}'
 ```
 
-### 6. Transizione e commento Jira
+### 6. Jira transition and comment
 
-Se c'è un ticket e `JIRA_IN_REVIEW_ID` è configurato e non vuoto:
+If there's a ticket and `JIRA_IN_REVIEW_ID` is configured and not empty:
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
 ```
 
-Usa il tool MCP `transitionJiraIssue` con `issueKey: "<KEY>"` e `transitionId: "$JIRA_IN_REVIEW_ID"`.
+Use the MCP tool `transitionJiraIssue` with `issueKey: "<KEY>"` and `transitionId: "$JIRA_IN_REVIEW_ID"`.
 
-Poi usa il tool MCP `addCommentToJiraIssue` con `issueKey: "<KEY>"` e `comment: "🔍 PR aperta: <PR_URL>"`.
+Then use the MCP tool `addCommentToJiraIssue` with `issueKey: "<KEY>"` and `comment: "🔍 PR opened: <PR_URL>"`.
 
-### 7. Notifica Slack
+### 7. Slack notification
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
 curl -sf -o /dev/null -X POST "$SLACK_WEBHOOK_URL" \
   -H "Content-type: application/json" \
-  -d "{\"text\":\"🔍 PR aperta: *<TITOLO_PR>*\n🔗 <PR_URL>\n🎫 <$JIRA_BASE_URL/browse/<KEY>|<KEY>> → *In Review*\"}"
+  -d "{\"text\":\"🔍 PR opened: *<PR_TITLE>*\n🔗 <PR_URL>\n🎫 <$JIRA_BASE_URL/browse/<KEY>|<KEY>> → *In Review*\"}"
 ```
 
-Se non c'è ticket Jira: `🔍 PR aperta: *<TITOLO_PR>*\n🔗 <PR_URL>`
+If there's no Jira ticket: `🔍 PR opened: *<PR_TITLE>*\n🔗 <PR_URL>`
 
-### 8. Conferma
+### 8. Confirmation
 
-Mostra all'utente:
-- PR creata: `<PR_URL>`
-- Ticket `<KEY>` → In Review (se applicabile)
-- Slack: notificato
+Show the user:
+- PR created: `<PR_URL>`
+- Ticket `<KEY>` → In Review (if applicable)
+- Slack: notified

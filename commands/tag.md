@@ -1,33 +1,33 @@
 ---
-description: Crea un tag di release, transita tutti i ticket Jira coinvolti a Done e notifica Slack
+description: Create a release tag, transition all involved Jira tickets to Done, and notify Slack
 ---
 
-## Obiettivo
+## Goal
 
-Creare un tag git per il deploy in produzione, trovare tutti i ticket Jira inclusi nella release, transitarli a Done, notificare Slack.
+Create a git tag for the production deploy, find all Jira tickets included in the release, transition them to Done, notify Slack.
 
-## Passi
+## Steps
 
-### 1. Determina il tag
+### 1. Determine the tag
 
-Recupera l'ultimo tag esistente:
+Fetch the latest existing tag:
 ```bash
 git tag --sort=-version:refname | head -5
 ```
 
-Suggerisci il prossimo tag: se l'ultimo è `v1.2.3`, proponi `v1.2.4` (patch bump). Mostra il suggerimento all'utente e chiedi conferma o un nome diverso.
+Suggest the next tag: if the latest is `v1.2.3`, propose `v1.2.4` (patch bump). Show the suggestion to the user and ask for confirmation or a different name.
 
-Se non ci sono tag, proponi `v0.1.0`.
+If there are no tags, propose `v0.1.0`.
 
-Assicurati di essere su `main` e che sia aggiornato:
+Make sure you're on `main` and it's up to date:
 ```bash
 git branch --show-current
 git pull origin main --ff-only
 ```
 
-### 2. Trova i ticket Jira nella release
+### 2. Find the Jira tickets in the release
 
-Recupera il diff dei commit dall'ultimo tag:
+Fetch the commit diff since the last tag:
 ```bash
 LAST_TAG=$(git tag --sort=-version:refname | head -1)
 if [ -n "$LAST_TAG" ]; then
@@ -37,72 +37,72 @@ else
 fi
 ```
 
-Estrai tutte le Jira key univoche (pattern `[A-Z]+-[0-9]+`) dai messaggi di commit e dai nomi dei branch mergiati. Mostra la lista all'utente.
+Extract all unique Jira keys (pattern `[A-Z]+-[0-9]+`) from commit messages and merged branch names. Show the list to the user.
 
-### 3. Crea e pusha il tag
+### 3. Create and push the tag
 
 ```bash
 git tag -a "<TAG>" -m "Release <TAG>"
 git push origin "<TAG>"
 ```
 
-### 4. Crea la GitHub Release (opzionale)
+### 4. Create the GitHub Release (optional)
 
-Chiedi all'utente se vuole creare una GitHub Release.
+Ask the user if they want to create a GitHub Release.
 
-Se sì:
+If yes:
 ```bash
 gh release create "<TAG>" \
   --title "Release <TAG>" \
   --notes "$(git log --pretty=format:"- %s" "${LAST_TAG}..HEAD" | head -20)"
 ```
 
-Cattura l'URL della release.
+Capture the release URL.
 
-### 5. Transizione e commento Jira per ogni ticket
+### 5. Jira transition and comment for each ticket
 
-Per ogni Jira key trovata:
+For each Jira key found:
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
 
-# Transizione Done/Released
+# Transition to Done/Released
 curl -sf -o /dev/null \
   -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/transitions" \
   -d "{\"transition\":{\"id\":\"$JIRA_DONE_ID\"}}"
 
-# Commento
+# Comment
 curl -sf -o /dev/null \
   -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/comment" \
-  -d "{\"body\":\"🚀 Deploy in produzione con tag \`<TAG>\`.\"}"
+  -d "{\"body\":\"🚀 Deployed to production with tag \`<TAG>\`.\"}"
 ```
 
-Esegui in sequenza per tutti i ticket trovati. Se un ticket fallisce (es. già Done), logga l'errore e continua.
+Run in sequence for all tickets found. If a ticket fails (e.g. already Done), log the error and continue.
 
-### 6. Notifica Slack
+### 6. Slack notification
 
-Costruisci la lista dei ticket come link Jira:
+Build the list of tickets as Jira links:
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
 DEPLOYER=$(git config user.name 2>/dev/null || echo "unknown")
 
-# Messaggio con tutti i ticket come links
+# Message with all tickets as links
 curl -sf -o /dev/null -X POST "$SLACK_WEBHOOK_URL" \
   -H "Content-type: application/json" \
-  -d "{\"text\":\"🚀 *Deploy Production* — Tag \`<TAG>\`\n👤 $DEPLOYER\n🎫 Ticket: <LISTA_TICKET_CON_LINKS>\n<RELEASE_URL_SE_PRESENTE>\"}"
+  -d "{\"text\":\"🚀 *Deploy Production* — Tag \`<TAG>\`\n👤 $DEPLOYER\n🎫 Tickets: <TICKET_LIST_WITH_LINKS>\n<RELEASE_URL_IF_PRESENT>\"}"
 ```
 
-Formato ticket nel messaggio: `<JIRA_BASE_URL/browse/DC-443|DC-443>` per ogni ticket, separati da spazio.
+Ticket format in the message: `<JIRA_BASE_URL/browse/DC-443|DC-443>` for each ticket, separated by a space.
 
-### 7. Conferma
+### 7. Confirmation
 
-Mostra all'utente:
-- Tag `<TAG>` creato e pushato
-- Ticket transitati a Done: `<lista>`
-- GitHub Release: `<URL>` (se creata)
-- Slack: notificato
+Show the user:
+- Tag `<TAG>` created and pushed
+- Tickets transitioned to Done: `<list>`
+- GitHub Release: `<URL>` (if created)
+- Slack: notified

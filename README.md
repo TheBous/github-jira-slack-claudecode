@@ -1,42 +1,42 @@
 # jira-git-sync
 
-Claude Code plugin: automazione del workflow git → Jira → Slack.
+Claude Code plugin: git → Jira → Slack workflow automation.
 
-## Comandi
+## Commands
 
-| Comando | Cosa fa |
+| Command | What it does |
 |---|---|
-| `/jira-git-sync:setup` | Configura credenziali Jira e Slack (una volta sola) |
-| `/jira-git-sync:new-branch` | Nuovo branch da ticket Jira → ticket In Progress + Slack |
-| `/jira-git-sync:create-pr` | Crea PR verso main → ticket In Review + Slack |
-| `/jira-git-sync:merge-pr` | Mergia PR → ticket In Staging + Slack |
-| `/jira-git-sync:tag` | Tag release → tutti i ticket Done + Slack |
+| `/jira-git-sync:setup` | Configure Jira and Slack credentials (one time only) |
+| `/jira-git-sync:new-branch` | New branch from a Jira ticket → ticket In Progress + Slack |
+| `/jira-git-sync:create-pr` | Create PR against main → ticket In Review + Slack |
+| `/jira-git-sync:merge-pr` | Merge PR → ticket In Staging + Slack |
+| `/jira-git-sync:tag` | Tag release → all tickets Done + Slack |
 
-## Installazione
+## Installation
 
 ```bash
-# Aggiungi la marketplace (una volta sola per team)
+# Add the marketplace (once per team)
 /plugin marketplace add lucvalse/jira-git-sync
 
-# Installa il plugin
+# Install the plugin
 /plugin install jira-git-sync
 
-# Configura le credenziali (interattivo)
+# Configure credentials (interactive)
 /jira-git-sync:setup
 ```
 
-## Requisiti
+## Requirements
 
-- `gh` CLI autenticato (`gh auth login`)
-- Account Jira con API token ([genera qui](https://id.atlassian.com/manage-profile/security/api-tokens))
-- Slack Incoming Webhook ([crea qui](https://api.slack.com/messaging/webhooks))
+- Authenticated `gh` CLI (`gh auth login`)
+- Jira account with API token ([generate here](https://id.atlassian.com/manage-profile/security/api-tokens))
+- Slack Incoming Webhook ([create here](https://api.slack.com/messaging/webhooks))
 
-## Convenzione branch
+## Branch convention
 
-Il nome del branch deve contenere la Jira key per il collegamento automatico:
+The branch name must contain the Jira key for automatic linking:
 
 ```
-feature/dc-443-titolo-del-ticket   ✓
+feature/dc-443-ticket-title        ✓
 fix/AUTH-12-fix-oauth-redirect     ✓
-my-random-branch                   ✗  (nessun collegamento Jira)
+my-random-branch                   ✗  (no Jira link)
 ```

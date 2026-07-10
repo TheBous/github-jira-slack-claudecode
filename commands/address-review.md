@@ -1,23 +1,23 @@
 ---
-description: Risolve i commenti di una code review, poi aggiorna la documentazione dove necessario
+description: Resolve code review comments, then update documentation where needed
 ---
 
-## Obiettivo
+## Goal
 
-Leggere i commenti aperti di una PR GitHub e risolverli uno alla volta: per ogni commento, proporre una fix, attendere l'approvazione dell'utente, applicarla solo dopo conferma, poi rispondere sulla PR. Nessuna modifica al codice viene fatta senza permesso esplicito. A fine ciclo, aggiornare la documentazione se necessario.
+Read the open comments on a GitHub PR and resolve them one at a time: for each comment, propose a fix, wait for the user's approval, apply it only after confirmation, then reply on the PR. No code is changed without explicit permission. At the end of the cycle, update documentation if needed.
 
-## Passi
+## Steps
 
-### 1. Identifica la PR
+### 1. Identify the PR
 
-Se l'utente ha passato un URL di PR nell'invocazione, usalo.
+If the user passed a PR URL when invoking the command, use it.
 
-Altrimenti, rileva la PR dal branch corrente:
+Otherwise, detect the PR from the current branch:
 ```bash
 gh pr view --json number,title,url,headRefName 2>/dev/null
 ```
 
-**Se il comando fallisce con un errore TLS/certificato**, usa questo fallback:
+**If the command fails with a TLS/certificate error**, use this fallback:
 ```bash
 OWNER_REPO=$(git remote get-url origin | sed -E 's#.*[:/]([^/]+/[^/]+)(\.git)?$#\1#')
 BRANCH=$(git branch --show-current)
@@ -26,138 +26,138 @@ curl -sf -H "Authorization: Bearer $(gh auth token)" \
   | jq '.[0] | {number, title, url: .html_url, headRefName: .head.ref}'
 ```
 
-Se non esiste una PR aperta per il branch corrente, chiedi all'utente di passare l'URL esplicitamente.
+If there's no open PR for the current branch, ask the user to pass the URL explicitly.
 
-### 2. Recupera i commenti della review
+### 2. Fetch the review comments
 
 ```bash
-gh pr view <NUMERO> --json reviews,comments \
+gh pr view <NUMBER> --json reviews,comments \
   --jq '.reviews[] | select(.state == "CHANGES_REQUESTED") | {author: .author.login, body: .body}'
 
-gh api repos/:owner/:repo/pulls/<NUMERO>/comments \
+gh api repos/:owner/:repo/pulls/<NUMBER>/comments \
   --jq '.[] | {path: .path, line: .line, body: .body, author: .user.login}'
 ```
 
-**Fallback TLS**:
+**TLS fallback**:
 ```bash
 curl -sf -H "Authorization: Bearer $(gh auth token)" \
-  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMERO>/reviews" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMBER>/reviews" \
   | jq '.[] | select(.state == "CHANGES_REQUESTED") | {author: .user.login, body}'
 
 curl -sf -H "Authorization: Bearer $(gh auth token)" \
-  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMERO>/comments" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls/<NUMBER>/comments" \
   | jq '.[] | {path, line, body, author: .user.login}'
 ```
 
-Raccoglie sia i commenti generali che quelli inline sul codice. Ordina i commenti inline per file e poi per numero di linea (ordine di apparizione nella PR). I commenti generali (review-level) vanno affrontati prima, in ordine cronologico.
+Collect both general comments and inline code comments. Sort inline comments by file, then by line number (order of appearance in the PR). General (review-level) comments should be addressed first, in chronological order.
 
-### 3. Imposta l'approccio con receiving-code-review
+### 3. Set the approach with receiving-code-review
 
-Se la skill `superpowers:receiving-code-review` è disponibile nel workspace, invocala una volta tramite il tool Skill per impostare l'approccio: rigore tecnico, verifica prima di implementare, niente accordo performativo. Applica questi principi manualmente per ogni commento nel ciclo del passo 4 — non re-invocare la skill ad ogni iterazione.
+If the `superpowers:receiving-code-review` skill is available in the workspace, invoke it once via the Skill tool to set the approach: technical rigor, verify before implementing, no performative agreement. Apply these principles manually to each comment in the loop in step 4 — don't re-invoke the skill on every iteration.
 
-Se non è disponibile, procedi comunque con lo stesso principio: valuta se il commento è tecnicamente fondato prima di proporre una fix.
+If it's not available, proceed anyway with the same principle: assess whether the comment is technically sound before proposing a fix.
 
-### 4. Risolvi i commenti uno alla volta
+### 4. Resolve comments one at a time
 
-**Non modificare mai il codice senza permesso esplicito dell'utente.** Per ogni commento, nell'ordine stabilito al passo 2:
+**Never change code without the user's explicit permission.** For each comment, in the order set in step 2:
 
-1. Mostra il commento:
+1. Show the comment:
    ```
-   📝 Commento su <file>:<line> (di <author>)
-   "<testo del commento>"
+   📝 Comment on <file>:<line> (by <author>)
+   "<comment text>"
    ```
-2. Analizza il commento e proponi una fix concreta:
+2. Analyze the comment and propose a concrete fix:
    ```
-   💡 Proposta: <descrizione della modifica che faresti>
+   💡 Proposal: <description of the change you would make>
 
-   Va bene? Vuoi modificarla o hai un'opinione diversa?
+   Sound good? Do you want to change it or do you have a different opinion?
    ```
-3. Attendi la risposta dell'utente. In base a cosa dice:
-   - **Approva**: applica la fix al codice
-   - **Modifica la proposta**: adatta la fix secondo le indicazioni, poi applicala
-   - **Non è d'accordo / vuole altro**: discuti finché non si converge su un'azione (che può essere anche "non cambiare nulla")
-4. Determina lo stato finale in base a cosa è stato deciso, usando questa tabella:
+3. Wait for the user's reply. Depending on what they say:
+   - **Approves**: apply the fix to the code
+   - **Modifies the proposal**: adapt the fix per their instructions, then apply it
+   - **Disagrees / wants something else**: discuss until you converge on an action (which may also be "don't change anything")
+4. Determine the final status based on what was decided, using this table:
 
-   | Stato | Formato | Quando usarlo |
+   | Status | Format | When to use it |
    |-------|---------|---------------|
-   | ✅ Fixed | `✅ Fixed — <breve descrizione del cambio>` | Modifica applicata |
-   | 🔄 Refactored | `🔄 Refactored — <cosa è cambiato e perché>` | Fix che ha comportato una ristrutturazione più ampia |
-   | 💬 Acknowledged | `💬 Acknowledged — <motivazione per non cambiare>` | Commento valido ma non richiede modifica al codice |
-   | ❓ Clarification needed | `❓ Clarification needed — <domanda specifica>` | Il commento non è chiaro o serve più contesto dal reviewer |
-   | 🚫 Won't Fix | `🚫 Won't Fix — <motivazione tecnica o di prodotto>` | Scelta intenzionale di non applicare il cambiamento |
-   | ⛔ Stalled | `⛔ Stalled — <dipendenza o blocco>` | Non risolvibile ora, bloccato da qualcosa di esterno |
+   | ✅ Fixed | `✅ Fixed — <brief description of the change>` | Fix applied |
+   | 🔄 Refactored | `🔄 Refactored — <what changed and why>` | Fix that required a broader restructuring |
+   | 💬 Acknowledged | `💬 Acknowledged — <reason for not changing>` | Valid comment but doesn't require a code change |
+   | ❓ Clarification needed | `❓ Clarification needed — <specific question>` | The comment is unclear or needs more context from the reviewer |
+   | 🚫 Won't Fix | `🚫 Won't Fix — <technical or product reasoning>` | Deliberate choice not to apply the change |
+   | ⛔ Stalled | `⛔ Stalled — <dependency or blocker>` | Can't be resolved now, blocked by something external |
 
-5. Posta subito la risposta su quel commento, prima di passare al successivo:
+5. Post the reply on that comment immediately, before moving to the next one:
    ```bash
    gh api repos/:owner/:repo/pulls/comments/<COMMENT_ID>/replies \
-     -X POST -f body="<risposta con emoji>"
+     -X POST -f body="<reply with emoji>"
    ```
 
-   **Fallback TLS**:
+   **TLS fallback**:
    ```bash
    curl -sf -X POST -H "Authorization: Bearer $(gh auth token)" \
      "https://api.github.com/repos/$OWNER_REPO/pulls/comments/<COMMENT_ID>/replies" \
-     -d "{\"body\":\"<risposta con emoji>\"}"
+     -d "{\"body\":\"<reply with emoji>\"}"
    ```
 
-Ripeti dal punto 1 per il commento successivo, finché la lista non è esaurita.
+Repeat from point 1 for the next comment, until the list is exhausted.
 
-### 5. Runna i test
+### 5. Run the tests
 
-Se sono state applicate modifiche al codice durante il ciclo, leggi `references/run-tests.md` (nella root del plugin) e segui le istruzioni per trovare e runnare i test/lint/check del progetto.
+If code changes were applied during the cycle, read `references/run-tests.md` (in the plugin root) and follow the instructions to find and run the project's tests/lint/checks.
 
-Se nessun commento ha richiesto modifiche al codice, salta questo passo.
+If no comment required code changes, skip this step.
 
-### 6. Analizza il diff complessivo e individua doc da aggiornare
+### 6. Analyze the overall diff and identify docs to update
 
-Dopo aver risolto tutti i commenti del ciclo:
+After resolving all the comments in the cycle:
 ```bash
 git diff HEAD --name-only
 ```
 
-Per ogni file modificato, valuta se il cambiamento è logicamente significativo (nuova firma, comportamento cambiato, rimosso qualcosa di pubblico). Se sì, cerca documentazione correlata:
+For each changed file, assess whether the change is logically significant (new signature, changed behavior, removed something public). If so, look for related documentation:
 
-**Docs locale** — controlla se esiste una cartella `docs/` nel repo:
+**Local docs** — check if a `docs/` folder exists in the repo:
 ```bash
-ls docs/ 2>/dev/null && grep -rl "<nome-file-modificato>" docs/ 2>/dev/null
+ls docs/ 2>/dev/null && grep -rl "<changed-file-name>" docs/ 2>/dev/null
 ```
 
-**Confluence** — carica le credenziali e controlla se `CONFLUENCE_PARENT_URL` è configurato:
+**Confluence** — load the credentials and check if `CONFLUENCE_PARENT_URL` is configured:
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env" 2>/dev/null
 ```
 
-Se `CONFLUENCE_PARENT_URL` è non vuoto, usa il tool MCP `searchConfluenceUsingCql`:
+If `CONFLUENCE_PARENT_URL` is not empty, use the MCP tool `searchConfluenceUsingCql`:
 ```
-ancestor = <PARENT_PAGE_ID> AND text ~ "<file-modificato>"
-```
-
-### 7. Chiedi conferma prima di aggiornare i doc
-
-Se ha trovato candidati (locali o Confluence), mostra all'utente:
-```
-📄 Questi documenti potrebbero richiedere aggiornamento:
-- [locale] docs/auth.md
-- [Confluence] Flusso di autenticazione → <url>
-
-Vuoi aggiornarli? (sì/no/elenca quali)
+ancestor = <PARENT_PAGE_ID> AND text ~ "<changed-file>"
 ```
 
-Attendi risposta prima di procedere.
+### 7. Ask for confirmation before updating docs
 
-### 8. Aggiorna la documentazione
+If candidates were found (local or Confluence), show the user:
+```
+📄 These documents might need updating:
+- [local] docs/auth.md
+- [Confluence] Authentication flow → <url>
 
-**Docs locale**: modifica direttamente i file `.md` nella cartella `docs/` con le informazioni aggiornate. Mostra il diff prima di salvare.
+Do you want to update them? (yes/no/list which ones)
+```
 
-**Confluence**: usa il tool MCP `updateConfluencePage` per ogni pagina confermata.
+Wait for a reply before proceeding.
 
-Se nessun documento è stato trovato o l'utente rifiuta, salta questo passo silenziosamente.
+### 8. Update the documentation
 
-### 9. Conferma
+**Local docs**: edit the `.md` files in the `docs/` folder directly with the updated information. Show the diff before saving.
 
-Mostra all'utente:
-- Fix applicate ai commenti della review
-- Test: `<lista script>` — tutti verdi (se eseguiti)
-- Risposte postate sulla PR con i relativi stati emoji
-- Documentazione aggiornata: `<lista file/pagine>` (se applicabile)
-- Suggerisci di fare push del branch con `git push`
+**Confluence**: use the MCP tool `updateConfluencePage` for each confirmed page.
+
+If no document was found or the user declines, skip this step silently.
+
+### 9. Confirmation
+
+Show the user:
+- Fixes applied for the review comments
+- Tests: `<list of scripts>` — all green (if run)
+- Replies posted on the PR with their emoji statuses
+- Documentation updated: `<list of files/pages>` (if applicable)
+- Suggest pushing the branch with `git push`
