@@ -51,22 +51,31 @@ curl -sf -H "Authorization: Bearer $(gh auth token)" \
 
 Collect both general comments and inline code comments. Sort inline comments by file, then by line number (order of appearance in the PR). General (review-level) comments should be addressed first, in chronological order.
 
-### 3. Set the approach with receiving-code-review
+### 3. Split multi-point comments into individual items
 
-If the `superpowers:receiving-code-review` skill is available in the workspace, invoke it once via the Skill tool to set the approach: technical rigor, verify before implementing, no performative agreement. Apply these principles manually to each comment in the loop in step 4 — don't re-invoke the skill on every iteration.
+Before building the work queue, check every comment (general or inline) for more than one distinct issue — a numbered/bulleted list, or several unrelated observations packed into one paragraph. If a comment raises multiple points, split it into separate items, one per point, each to be proposed, approved, and resolved on its own in step 5. Never bundle multiple points into a single proposal just because they arrived in the same comment.
 
-If it's not available, proceed anyway with the same principle: assess whether the comment is technically sound before proposing a fix.
+Keep each split item tagged with the `COMMENT_ID` of the comment it came from — that's needed in step 5 to know where the reply goes.
 
-### 4. Resolve comments one at a time
+The work queue for step 5 is built from these items, not from the raw comments: a comment with 3 points becomes 3 queue items in order; a comment with 1 point stays 1 item.
 
-**Never change code without the user's explicit permission.** For each comment, in the order set in step 2:
+### 4. Set the approach with receiving-code-review
 
-1. Show the comment:
+If the `superpowers:receiving-code-review` skill is available in the workspace, invoke it once via the Skill tool to set the approach: technical rigor, verify before implementing, no performative agreement. Apply these principles manually to each item in the loop in step 5 — don't re-invoke the skill on every iteration.
+
+If it's not available, proceed anyway with the same principle: assess whether the item is technically sound before proposing a fix.
+
+### 5. Resolve items one at a time
+
+**Never change code without the user's explicit permission, and never batch multiple items into one fix.** Work through the queue built in step 3 strictly one item at a time — even two items from the same original comment get their own full cycle below:
+
+1. Show the item:
    ```
    📝 Comment on <file>:<line> (by <author>)
-   "<comment text>"
+   "<item text>"
    ```
-2. Analyze the comment and propose a concrete fix:
+   If this item came from a split multi-point comment, say so and show only that point's text, not the whole original comment.
+2. Analyze the item and propose a concrete fix:
    ```
    💡 Proposal: <description of the change you would make>
 
@@ -87,28 +96,38 @@ If it's not available, proceed anyway with the same principle: assess whether th
    | 🚫 Won't Fix | `🚫 Won't Fix — <technical or product reasoning>` | Deliberate choice not to apply the change |
    | ⛔ Stalled | `⛔ Stalled — <dependency or blocker>` | Can't be resolved now, blocked by something external |
 
-5. Post the reply on that comment immediately, before moving to the next one:
-   ```bash
-   gh api repos/:owner/:repo/pulls/comments/<COMMENT_ID>/replies \
-     -X POST -f body="<reply with emoji>"
-   ```
+5. Record the status line for this item against its `COMMENT_ID`, then move to the next item in the queue.
 
-   **TLS fallback**:
-   ```bash
-   curl -sf -X POST -H "Authorization: Bearer $(gh auth token)" \
-     "https://api.github.com/repos/$OWNER_REPO/pulls/comments/<COMMENT_ID>/replies" \
-     -d "{\"body\":\"<reply with emoji>\"}"
-   ```
+Once every item sharing the same `COMMENT_ID` has been resolved, post the reply for that comment:
+- **Single item**: post its status line directly.
+  ```bash
+  gh api repos/:owner/:repo/pulls/comments/<COMMENT_ID>/replies \
+    -X POST -f body="<status line with emoji>"
+  ```
+- **Multiple items from a split comment**: post one consolidated reply listing every point's status, in the order they appeared in the original comment:
+  ```bash
+  gh api repos/:owner/:repo/pulls/comments/<COMMENT_ID>/replies \
+    -X POST -f body="1. <status line 1>
+  2. <status line 2>
+  3. <status line 3>"
+  ```
 
-Repeat from point 1 for the next comment, until the list is exhausted.
+**TLS fallback** (either case):
+```bash
+curl -sf -X POST -H "Authorization: Bearer $(gh auth token)" \
+  "https://api.github.com/repos/$OWNER_REPO/pulls/comments/<COMMENT_ID>/replies" \
+  -d "{\"body\":\"<reply body, single line or numbered list>\"}"
+```
 
-### 5. Run the tests
+Continue through the queue until every item — and every comment's reply — is posted.
+
+### 6. Run the tests
 
 If code changes were applied during the cycle, read `references/run-tests.md` (in the plugin root) and follow the instructions to find and run the project's tests/lint/checks.
 
 If no comment required code changes, skip this step.
 
-### 6. Analyze the overall diff and identify docs to update
+### 7. Analyze the overall diff and identify docs to update
 
 After resolving all the comments in the cycle:
 ```bash
@@ -132,7 +151,7 @@ If `CONFLUENCE_PARENT_URL` is not empty, use the MCP tool `searchConfluenceUsing
 ancestor = <PARENT_PAGE_ID> AND text ~ "<changed-file>"
 ```
 
-### 7. Ask for confirmation before updating docs
+### 8. Ask for confirmation before updating docs
 
 If candidates were found (local or Confluence), show the user:
 ```
@@ -145,7 +164,7 @@ Do you want to update them? (yes/no/list which ones)
 
 Wait for a reply before proceeding.
 
-### 8. Update the documentation
+### 9. Update the documentation
 
 **Local docs**: edit the `.md` files in the `docs/` folder directly with the updated information. Show the diff before saving.
 
@@ -153,7 +172,7 @@ Wait for a reply before proceeding.
 
 If no document was found or the user declines, skip this step silently.
 
-### 9. Confirmation
+### 10. Confirmation
 
 Show the user:
 - Fixes applied for the review comments
