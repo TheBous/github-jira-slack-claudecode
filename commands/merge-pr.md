@@ -45,7 +45,7 @@ curl -sf -H "Authorization: Bearer $(gh auth token)" \
 Extract:
 - `headRefName`: the PR's branch
 - `url`: the PR URL
-- Jira key from the branch name (pattern `[A-Z]+-[0-9]+`)
+- Jira key from the branch name (pattern `[A-Za-z]+-[0-9]+`, case-insensitive — branch names use a lowercase key). Uppercase the match (e.g. `dc-443` → `DC-443`) before using it as `<KEY>`.
 
 ### 3. Merge the PR
 

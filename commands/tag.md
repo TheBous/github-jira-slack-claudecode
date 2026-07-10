@@ -37,7 +37,7 @@ else
 fi
 ```
 
-Extract all unique Jira keys (pattern `[A-Z]+-[0-9]+`) from commit messages and merged branch names. Show the list to the user.
+Extract all unique Jira keys (pattern `[A-Za-z]+-[0-9]+`, case-insensitive — branch names use a lowercase key, commit messages may use either) from commit messages and merged branch names. Uppercase every match (e.g. `dc-443` → `DC-443`) before deduplicating, so the same ticket isn't counted twice under different casing. Show the list to the user.
 
 ### 3. Create and push the tag
 

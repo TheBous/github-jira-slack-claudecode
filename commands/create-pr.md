@@ -29,7 +29,7 @@ git push -u origin "$(git branch --show-current)"
 
 ### 2. Extract the Jira ticket and fetch details
 
-From the branch name, look for a pattern `[A-Z]+-[0-9]+` (e.g. `dc-443` → `DC-443`).
+From the branch name, look for a pattern `[A-Za-z]+-[0-9]+`, case-insensitive — branch names use a lowercase key. Uppercase the match (e.g. `dc-443` → `DC-443`) before using it as `<KEY>`.
 
 If found, fetch the ticket's title and description using the MCP tool `getJiraIssue` with `issueKey: "<KEY>"` and `fields: ["summary", "description"]`.
 

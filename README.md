@@ -36,7 +36,7 @@ Claude Code plugin: git → Jira → Slack workflow automation.
 The branch name must contain the Jira key for automatic linking:
 
 ```
-feature/dc-443-ticket-title        ✓
+feat/dc-443-ticket-title           ✓
 fix/AUTH-12-fix-oauth-redirect     ✓
 my-random-branch                   ✗  (no Jira link)
 ```
