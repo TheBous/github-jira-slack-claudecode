@@ -151,3 +151,4 @@ Show the user:
 - PR created: `<PR_URL>`
 - Ticket `<KEY>` → In Review (if applicable)
 - Slack: notified
+- → Suggest the next step: `/jira-git-sync:review-pr` to get it reviewed
