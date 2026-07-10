@@ -48,6 +48,8 @@ Analyze the diff to identify:
 - Whether there are breaking changes
 - Whether tests were added
 
+**Don't trust the diff hunk alone** for this — when it doesn't show the full function body, type definitions, or imports needed to judge the change, read the full file locally (it's already checked out on this branch, no need for the GitHub API).
+
 ### 4. Auto-generate title and description
 
 **Title**: `[<KEY>] <Jira ticket title>` — if there's no ticket, use the most recent commit title.
