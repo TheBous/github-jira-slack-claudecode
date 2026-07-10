@@ -75,7 +75,7 @@ If it's not available, proceed anyway with the same principle: assess whether th
    "<item text>"
    ```
    If this item came from a split multi-point comment, say so and show only that point's text, not the whole original comment.
-2. Analyze the item and propose a concrete fix:
+2. Analyze the item and propose a concrete fix. Any new or renamed identifier in the fix must follow `references/naming-conventions-code.md` (in the plugin root) — plus `references/naming-conventions-db.md` for schema/migration changes or `references/naming-conventions-nextjs.md` for Next.js App Router files. Check for a library-mandated name or an existing sibling pattern before treating something as a violation.
    ```
    💡 Proposal: <description of the change you would make>
 

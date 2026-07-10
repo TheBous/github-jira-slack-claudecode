@@ -50,6 +50,8 @@ This choice only affects how requirements are refined beforehand — implementat
 
 Read the relevant code in the repository to understand the context before writing. Invoke the `superpowers:test-driven-development` skill and follow it: write tests for the acceptance criteria first — they should fail, since the behavior doesn't exist yet. Show the failing output, then implement just enough code to make them pass, following the existing codebase's conventions. Repeat red → green per unit of behavior rather than writing everything at once.
 
+Every new or renamed identifier must follow `references/naming-conventions-code.md` (in the plugin root) — always applicable. If the change touches DB schema/migrations, also follow `references/naming-conventions-db.md`; if it touches a Next.js App Router file, also follow `references/naming-conventions-nextjs.md`. Before flagging your own code as a violation, check for a library-mandated name or an existing sibling pattern in the same file — an inherited convention isn't a new error.
+
 After each significant change, briefly show what you did before continuing.
 
 ### 4. Run the tests
