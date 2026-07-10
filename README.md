@@ -6,11 +6,16 @@ Claude Code plugin: git → Jira → Slack workflow automation.
 
 | Command | What it does |
 |---|---|
-| `/jira-git-sync:setup` | Configure Jira and Slack credentials (one time only) |
+| `/jira-git-sync:setup` | Configure Jira, Slack, and Confluence credentials (one time only) |
 | `/jira-git-sync:new-branch` | New branch from a Jira ticket → ticket In Progress + Slack |
+| `/jira-git-sync:cook` | Implement a feature/fix on the current branch, TDD-first, tests + docs |
 | `/jira-git-sync:create-pr` | Create PR against main → ticket In Review + Slack |
+| `/jira-git-sync:review-pr` | Review a PR: analysis, verdict, inline comments, structured review |
+| `/jira-git-sync:address-review` | Resolve a PR's review comments one at a time, then update docs |
 | `/jira-git-sync:merge-pr` | Merge PR → ticket In Staging + Slack |
 | `/jira-git-sync:tag` | Tag release → all tickets Done + Slack |
+| `/jira-git-sync:create-doc` | Create a new Confluence documentation page from code |
+| `/jira-git-sync:update-doc` | Update an existing Confluence documentation page |
 
 ## Installation
 
