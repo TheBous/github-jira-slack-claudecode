@@ -44,9 +44,11 @@ How do you want to approach this task?
 - If they choose **2**: invoke the `grilling` skill before proceeding
 - If they choose **3**: go directly to step 3
 
+This choice only affects how requirements are refined beforehand — implementation always follows TDD (step 3), regardless of which option was picked.
+
 ### 3. Implement
 
-Read the relevant code in the repository to understand the context before writing. Implement the feature or fix following the existing codebase's conventions.
+Read the relevant code in the repository to understand the context before writing. Invoke the `superpowers:test-driven-development` skill and follow it: write tests for the acceptance criteria first — they should fail, since the behavior doesn't exist yet. Show the failing output, then implement just enough code to make them pass, following the existing codebase's conventions. Repeat red → green per unit of behavior rather than writing everything at once.
 
 After each significant change, briefly show what you did before continuing.
 
