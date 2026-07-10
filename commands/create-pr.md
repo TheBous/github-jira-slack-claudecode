@@ -91,7 +91,22 @@ Fixes <JIRA_BASE_URL>/browse/<KEY>
 
 Automatically check the correct checkbox in "Type of Change" based on the analyzed diff.
 
-### 5. Create the PR
+### 5. Ask for a screenshot (only if the change is visual)
+
+Based on the diff analysis from step 3, decide whether this change is screenshot-worthy: new or modified UI (components, pages, styles, layouts) — yes; pure backend/core logic, refactoring, config, or non-visual bug fixes — no.
+
+If it's screenshot-worthy, ask the user:
+```
+📸 This looks like a UI change — got a screenshot of the result? (paste an image URL, or say no to skip)
+```
+
+- If they give a URL, embed it in the `## Screenshots` section: `![screenshot](<URL>)`.
+- If they say no or have none, leave the `## Screenshots` section as `_No screenshot provided._`.
+- If they only have a local file path, note that `gh`/the API can't upload images — tell them to drag the file into the PR description on GitHub after it's created, then move on.
+
+If the change isn't screenshot-worthy, skip this step silently and remove the `## Screenshots` section from the template.
+
+### 6. Create the PR
 
 ```bash
 gh pr create \
@@ -113,7 +128,7 @@ curl -sf \
   | jq '{number, url: .html_url}'
 ```
 
-### 6. Jira transition and comment
+### 7. Jira transition and comment
 
 If there's a ticket and `JIRA_IN_REVIEW_ID` is configured and not empty:
 
@@ -125,7 +140,7 @@ Use the MCP tool `transitionJiraIssue` with `issueKey: "<KEY>"` and `transitionI
 
 Then use the MCP tool `addCommentToJiraIssue` with `issueKey: "<KEY>"` and `comment: "🔍 PR opened: <PR_URL>"`.
 
-### 7. Slack notification
+### 8. Slack notification
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
@@ -136,7 +151,7 @@ curl -sf -o /dev/null -X POST "$SLACK_WEBHOOK_URL" \
 
 If there's no Jira ticket: `🔍 PR opened: *<PR_TITLE>*\n🔗 <PR_URL>`
 
-### 8. Confirmation
+### 9. Confirmation
 
 Show the user:
 - PR created: `<PR_URL>`
