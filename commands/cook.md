@@ -37,14 +37,15 @@ How do you want to approach this task?
 
 1. 🧠 Brainstorming — explore options and approaches before writing code
 2. 🔥 Grilling — a Q&A session to nail down requirements in detail
-3. ⚡ Direct — implement right away with no preliminary flow
+3. 🗺️ Wayfinder — chart the project as a map of decisions, resolve one ticket at a time
+4. ⚡ Direct — implement right away with no preliminary flow
 ```
 
 - If they choose **1**: invoke the `superpowers:brainstorming` skill before proceeding
 - If they choose **2**: invoke the `grilling` skill before proceeding
-- If they choose **3**: go directly to step 3
+- If they choose **4**: go directly to step 4
 
-This choice only affects how requirements are refined beforehand — implementation always follows TDD (step 3), regardless of which option was picked.
+This choice only affects how requirements are refined beforehand — implementation always follows TDD, regardless of which option was picked.
 
 ### 3. Implement
 
