@@ -4,18 +4,18 @@ Claude Code plugin: git → Jira → Slack workflow automation.
 
 ## Commands
 
-| Command | What it does |
-|---|---|
-| `/jira-git-sync:setup` | Configure Jira, Slack, and Confluence credentials (one time only) |
-| `/jira-git-sync:new-branch` | New branch from a Jira ticket → ticket In Progress + Slack |
-| `/jira-git-sync:cook` | Implement a feature/fix on the current branch, TDD-first, tests + docs |
-| `/jira-git-sync:create-pr` | Create PR against main → ticket In Review + Slack |
-| `/jira-git-sync:review-pr` | Review a PR: analysis, verdict, inline comments, structured review |
-| `/jira-git-sync:address-review` | Resolve a PR's review comments one at a time, then update docs |
-| `/jira-git-sync:merge-pr` | Merge PR → ticket In Staging + Slack |
-| `/jira-git-sync:tag` | Tag release → all tickets Done + Slack |
-| `/jira-git-sync:create-doc` | Create a new Confluence documentation page from code |
-| `/jira-git-sync:update-doc` | Update an existing Confluence documentation page |
+| Command | What it does | When to use | Outcome |
+|---|---|---|---|
+| **setup** | Configure Jira, Slack, Confluence credentials | Once, at project start | Credentials saved locally in `.env` |
+| **new-branch** | Create branch from Jira ticket + move ticket to In Progress | Start a task | Branch created, Slack notified, ticket In Progress |
+| **cook** | Implement feature/fix: write code, run tests, update docs | While developing on the branch | Code committed, tests passed, docs current |
+| **create-pr** | Open PR against main + link Jira + notify Slack | When code is ready for review | PR opened, Jira commented, Slack notified |
+| **review-pr** | Analyze PR: correctness, naming, coverage + structured review | As a reviewer on any PR | Verdict shown, inline comments ready to submit |
+| **address-review** | Resolve each review comment one-by-one + update docs | After receiving review feedback | Comments resolved, fixes applied, PR updated |
+| **merge-pr** | Merge PR + move ticket to In Staging + notify Slack | After PR is approved | PR merged to main, ticket In Staging, Slack notified |
+| **tag** | Create release tag + transition all tickets to Done + Slack | Before production deploy | Tag created, all tickets Done, Slack notified |
+| **create-doc** | Generate new Confluence page from code | Documenting a new feature | Page created under Confluence parent |
+| **update-doc** | Update existing Confluence page with latest changes | Keeping docs in sync with code | Page updated with new content |
 
 ## Installation
 
