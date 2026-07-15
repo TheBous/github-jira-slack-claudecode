@@ -14,12 +14,7 @@ Guide the user step by step through the setup. Ask one question at a time and wa
 
 3. **Confluence Parent URL** — ask for the URL of the Confluence page that will act as the parent folder for documentation (e.g. `https://company.atlassian.net/wiki/spaces/TECH/pages/123456/Documentation`). This page must already exist. If the user doesn't use Confluence, they can skip this step by leaving it blank.
 
-5. **Transition IDs** — after collecting the Jira URL, email, and token, run:
-   ```bash
-   curl -s -u "<EMAIL>:<TOKEN>" "<BASE_URL>/rest/api/2/issue/<ANY_TICKET>/transitions" \
-     | python3 -m json.tool | grep -E '"id"|"name"'
-   ```
-   Ask the user for any ticket to test against, run the command with the real data, show the list of statuses, then ask them to pick the IDs for:
+4. **Transition IDs** — ask the user for a Jira ticket key to inspect available transitions. Use the Atlassian Rovo MCP to fetch the transition list via `getTransitionsForJiraIssue(issueKey: "<TICKET>")`, display the available statuses, then ask them to pick the IDs for:
    - **In Progress** (when a branch is created)
    - **In Review** (when a PR is created) — skip if it doesn't exist
    - **In Staging** (when the PR is merged)
