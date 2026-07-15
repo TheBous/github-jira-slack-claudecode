@@ -45,3 +45,64 @@ feat/dc-443-ticket-title           ✓
 fix/AUTH-12-fix-oauth-redirect     ✓
 my-random-branch                   ✗  (no Jira link)
 ```
+
+## Testing & Regression Prevention
+
+### What are Evals?
+
+Evals are automated test cases that verify each command works as expected. Each eval:
+- **Defines a task** (e.g., "Create a new branch for ticket DC-443")
+- **Lists expectations** (e.g., "Calls getJiraIssue", "Branch includes ticket key", "Ticket transitioned to In Progress")
+- **Runs the command** and checks if all expectations are met
+- **Produces a report** with pass/fail for each expectation
+
+Evals live in `evals/evals.json5` (human-readable format) and can be run to catch regressions before merging changes.
+
+### Running Evals
+
+Inside Claude Code (interactive session):
+
+```
+/skill-creator
+```
+
+Then say: "Run evals mode. Test evals/evals.json5 for jira-git-sync."
+
+This spawns subagents to:
+1. Execute each test case (executor)
+2. Grade each expectation (grader)
+3. Produce a `grading.json` report with pass/fail + evidence
+
+### Preventing Regressions
+
+**Before modifying a command:**
+1. Run the full eval suite to establish a baseline
+2. Note which expectations pass
+3. Make your change
+4. Re-run evals — if pass rates drop, you've introduced a regression
+5. Either fix the regression or update the evals if the new behavior is intentional
+
+**After adding a new command:**
+1. Write 2–3 realistic test cases in `evals/evals.json5`
+2. Run evals to confirm they all pass
+3. Commit both the command and its evals
+4. Anyone can now run evals to verify the command still works
+
+### Example Eval
+
+```json5
+{
+  id: 1,
+  command: "new-branch",
+  prompt: "Create a new branch for ticket DC-443",
+  expected_output: "Fetches DC-443 from Jira, derives branch name, creates branch, transitions ticket, posts Slack notification",
+  expectations: [
+    "Calls getJiraIssue for DC-443 before naming the branch",
+    "Branch name includes the lowercase ticket key (dc-443)",
+    "Ticket is transitioned to 'In Progress' via Jira MCP",
+    "A Slack message is sent announcing the new branch"
+  ]
+}
+```
+
+When you run evals, each expectation is checked against the transcript — if all pass, that eval passes.
