@@ -30,6 +30,28 @@ Claude Code plugin: git → Jira → Slack workflow automation.
 /jira-git-sync:setup
 ```
 
+## OpenCode
+
+```bash
+git clone <questa-repo> ~/dev/jira-git-sync   # una volta sola
+bash ~/dev/jira-git-sync/scripts/install-opencode.sh
+```
+
+Lo script symlinka `SKILL.md` (router) in `~/.agents/skills/jira-git-sync` e i 10 comandi in `~/.config/opencode/commands/`. Dopo aver riavviato OpenCode:
+
+```
+/jira-new-branch DC-443
+/jira-create-pr
+/jira-merge-pr
+/jira-tag v1.2.3
+```
+
+Stesso UX di `/jira-git-sync:<workflow>` in Claude Code — solo lo slug è più corto perché OpenCode non supporta `:` nei nomi comando (`/jira-<workflow>` invece di `/jira-git-sync:<workflow>`).
+
+Aggiornamenti: `git pull` nel clone — i symlink riflettono le nuove versioni, niente reinstallazione. Il server MCP Atlassian va configurato a parte in OpenCode, stesse credenziali di Claude Code (`~/.config/jira-git-sync/.env`).
+
+Dettagli su come ogni host (Claude Code, OpenCode, agenti generici via `AGENTS.md`) espone gli stessi workflow: [docs/agent-portability.md](docs/agent-portability.md).
+
 ## Requirements
 
 - Authenticated `gh` CLI (`gh auth login`)
