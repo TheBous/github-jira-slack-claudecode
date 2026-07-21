@@ -55,9 +55,35 @@ Dettagli su come ogni host (Claude Code, OpenCode, agenti generici via `AGENTS.m
 
 ## Requirements
 
+### External Tools & Credentials
+
 - Authenticated `gh` CLI (`gh auth login`)
 - Jira account with API token ([generate here](https://id.atlassian.com/manage-profile/security/api-tokens))
 - Slack Incoming Webhook ([create here](https://api.slack.com/messaging/webhooks))
+
+### Required MCP Servers
+
+Your harness **must have** these MCP servers configured before using `jira-git-sync`:
+
+| Server | Used By | Purpose |
+|--------|---------|---------|
+| **Atlassian** (`plugin:productivity:atlassian` in Claude Code) | `new-branch`, `cook`, `create-pr`, `review-pr`, `merge-pr`, `tag`, `create-doc`, `update-doc` | Fetch Jira ticket details, transition tickets, comment on Jira, create/update Confluence pages |
+| **context7** (`plugin:context7:context7` in Claude Code) | `judge` (libraries sub-agent) | Resolve third-party library documentation to verify best-practice usage |
+
+Both servers are configured with shared credentials at `~/.config/jira-git-sync/.env` (set up once via `/jira-git-sync:setup`).
+
+### Required Skills
+
+Your harness **should have** these skills installed:
+
+| Skill | Used By | Required? | Purpose |
+|-------|---------|-----------|---------|
+| `superpowers:brainstorming` | `cook` | No (user choice) | Explore design options before implementation |
+| `grilling` | `cook` | No (user choice) | Intensive Q&A to nail down requirements |
+| `superpowers:test-driven-development` | `cook` | Yes | Test-first implementation workflow |
+| `context7:docs-researcher` | `judge` | No | Enhanced library documentation lookup (complements MCP context7) |
+
+Skills are installed globally and automatically available in all Claude Code projects. If missing, workflows will suggest installing them or offer alternatives.
 
 ## Branch convention
 
