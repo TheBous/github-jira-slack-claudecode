@@ -12,6 +12,7 @@ Claude Code plugin: git → Jira → Slack workflow automation.
 | **create-pr** | Open PR against main + link Jira + notify Slack | When code is ready for review | PR opened, Jira commented, Slack notified |
 | **review-pr** | Analyze PR: correctness, naming, coverage + structured review | As a reviewer on any PR | Verdict shown, inline comments ready to submit |
 | **address-review** | Resolve each review comment one-by-one + update docs | After receiving review feedback | Comments resolved, fixes applied, PR updated |
+| **judge** | Naming, security, and library-best-practices review via 3 parallel sub-agents | Before opening/merging a PR, or on demand | Three side-by-side reports: naming, security, libraries |
 | **merge-pr** | Merge PR + move ticket to In Staging + notify Slack | After PR is approved | PR merged to main, ticket In Staging, Slack notified |
 | **tag** | Create release tag + transition all tickets to Done + Slack | Before production deploy | Tag created, all tickets Done, Slack notified |
 | **create-doc** | Generate new Confluence page from code | Documenting a new feature | Page created under Confluence parent |
@@ -37,7 +38,7 @@ git clone <questa-repo> ~/dev/jira-git-sync   # una volta sola
 bash ~/dev/jira-git-sync/scripts/install-opencode.sh
 ```
 
-Lo script symlinka `SKILL.md` (router) in `~/.agents/skills/jira-git-sync` e i 10 comandi in `~/.config/opencode/commands/`. Dopo aver riavviato OpenCode:
+Lo script symlinka `SKILL.md` (router) in `~/.agents/skills/jira-git-sync` e gli 11 comandi in `~/.config/opencode/commands/`. Dopo aver riavviato OpenCode:
 
 ```
 /jira-new-branch DC-443

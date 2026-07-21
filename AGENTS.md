@@ -14,6 +14,7 @@ Full step-by-step logic for each workflow lives in `commands/*.md` (shared helpe
 | `commands/create-pr.md` | Open PR against main, link Jira, notify Slack |
 | `commands/review-pr.md` | Analyze PR: correctness, naming, coverage + structured review |
 | `commands/address-review.md` | Resolve review comments one-by-one, update docs |
+| `commands/judge.md` | Naming + security + library-best-practices triple review of the current diff, via 3 parallel sub-agents |
 | `commands/merge-pr.md` | Merge PR, move ticket to In Staging, notify Slack |
 | `commands/tag.md` | Create release tag, transition tickets to Done, notify Slack |
 | `commands/create-doc.md` | Generate new Confluence page from code |

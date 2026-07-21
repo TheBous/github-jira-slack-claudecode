@@ -1,7 +1,7 @@
 # Agent Portability
 
 jira-git-sync is an agent-portable workflow bundle. `commands/*.md` hold the
-actual workflow logic (10 files, one per workflow); host-specific files are
+actual workflow logic (11 files, one per workflow); host-specific files are
 thin adapters that make those workflows loadable and slash-invocable in a
 given agent.
 
@@ -34,9 +34,9 @@ the `/` entry point.
 
 ## Portable Behavior
 
-All 10 workflows live in `commands/*.md` and are identical across hosts:
+All 11 workflows live in `commands/*.md` and are identical across hosts:
 `setup`, `new-branch`, `cook`, `create-pr`, `review-pr`, `address-review`,
-`merge-pr`, `tag`, `create-doc`, `update-doc`. Credentials
+`judge`, `merge-pr`, `tag`, `create-doc`, `update-doc`. Credentials
 (`${CLAUDE_PLUGIN_DATA:-$HOME/.config/jira-git-sync}/.env`) and the Atlassian
 MCP server configuration are shared across every host — set up once, works
 everywhere.

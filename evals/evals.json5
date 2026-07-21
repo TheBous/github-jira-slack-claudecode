@@ -133,6 +133,30 @@
         "Allows the Confluence parent URL to be left blank for users who don't use Confluence",
         "Notes that Jira/Confluence auth goes through the Atlassian Rovo MCP, not manual API tokens"
       ]
+    },
+    {
+      id: 12,
+      command: "judge",
+      prompt: "Judge my pending changes before I open a PR",
+      expected_output: "Diffs the uncommitted changes, spawns naming/security/library sub-agents in parallel, and presents the three reports separately",
+      expectations: [
+        "Diff scope is resolved before any sub-agent is spawned, not guessed independently by a sub-agent",
+        "Three Agent calls are sent in a single message, not sequentially",
+        "The security sub-agent invokes the security-review skill rather than an inline ad hoc check",
+        "The libraries sub-agent resolves each touched library via context7 before judging it",
+        "Naming, Security, and Libraries findings are shown under separate headings, not merged or reranked together"
+      ]
+    },
+    {
+      id: 13,
+      command: "judge",
+      prompt: "Run judge on the diff against main, but this change only touches internal helper functions with no third-party imports",
+      expected_output: "Diffs against main, runs naming and security sub-agents normally, and reports the Libraries axis as not applicable instead of fabricating a library finding",
+      expectations: [
+        "Diffs with git diff main...HEAD rather than the uncommitted working tree",
+        "Libraries sub-agent reports 'no external libraries touched' rather than inventing a finding",
+        "Naming and Security axes still run and report normally despite the empty Libraries axis"
+      ]
     }
   ]
 }
