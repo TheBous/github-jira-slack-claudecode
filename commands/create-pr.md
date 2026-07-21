@@ -130,13 +130,34 @@ curl -sf \
   | jq '{number, url: .html_url}'
 ```
 
-### 7. Jira transition and comment
+### 7. Jira comment (always)
 
-If there's a ticket and `JIRA_IN_REVIEW_ID` is configured and not empty, follow `references/jira-transition.md` (in the plugin root) with:
+If there's a ticket, **always** leave a comment on the Jira issue:
+
+```bash
+source "${CLAUDE_PLUGIN_DATA}/.env"
+```
+
+Use the MCP tool `addCommentToJiraIssue` with `issueKey: "<KEY>"` and `comment: "🔍 PR opened: <PR_URL>"`.
+
+**If the MCP call fails**, use curl fallback:
+```bash
+curl -sf -o /dev/null \
+  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -X POST "$JIRA_BASE_URL/rest/api/2/issue/<KEY>/comment" \
+  -d "{\"body\":\"🔍 PR opened: <PR_URL>\"}"
+```
+
+### 8. Jira transition (optional)
+
+If there's a ticket **and** `JIRA_IN_REVIEW_ID` is configured and not empty, also transition the ticket using `references/jira-transition.md` with:
 - `<TRANSITION_ID>` = `$JIRA_IN_REVIEW_ID`
-- `<COMMENT_TEXT>` = `"🔍 PR opened: <PR_URL>"`
+- `<COMMENT_TEXT>` = (empty/skip comment in jira-transition, we already left one in step 7)
 
-### 8. Slack notification
+If the transition fails or `JIRA_IN_REVIEW_ID` is not configured, **continue anyway** — the comment was already left in step 7.
+
+### 9. Slack notification
 
 ```bash
 source "${CLAUDE_PLUGIN_DATA}/.env"
@@ -147,10 +168,13 @@ curl -sf -o /dev/null -X POST "$SLACK_WEBHOOK_URL" \
 
 If there's no Jira ticket: `🔍 PR opened: *<PR_TITLE>*\n🔗 <PR_URL>`
 
-### 9. Confirmation
+If Slack notification fails, **continue anyway** — the PR and Jira comment were already done.
+
+### 11. Confirmation
 
 Show the user:
 - PR created: `<PR_URL>`
-- Ticket `<KEY>` → In Review (if applicable)
-- Slack: notified
+- Jira comment: left on `<KEY>` (if ticket found)
+- Ticket `<KEY>` → In Review (if transition succeeded; otherwise note it was skipped)
+- Slack: notified (or "notification failed, but PR and comment are done")
 - → Suggest the next step: `/jira-git-sync:review-pr` to get it reviewed
