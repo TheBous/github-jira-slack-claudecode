@@ -157,6 +157,6 @@
         "Libraries sub-agent reports 'no external libraries touched' rather than inventing a finding",
         "Naming and Security axes still run and report normally despite the empty Libraries axis"
       ]
-    }
+    },
   ]
 }

@@ -10,6 +10,10 @@ Triple-check pending changes along three independent axes — each run by its ow
 - **Security** — does the diff introduce a security issue?
 - **Libraries** — does the diff follow the current best practices of the third-party libraries it touches?
 
+## Shared Skill Definition
+
+The `check-security` skill (in `references/check-security.md`) is used by the Security sub-agent in step 2 below. Read it once to understand what the sub-agent is briefed to do.
+
 ## Steps
 
 ### 1. Pin the diff scope
@@ -30,7 +34,7 @@ Send **one message with three `Agent` tool calls** (subagent_type `general-purpo
 
 **Naming sub-agent** — give it the diff plus `references/naming-conventions-code.md` (always), `references/naming-conventions-db.md` (if the diff touches DB schema/migrations), and `references/naming-conventions-nextjs.md` (if it touches a Next.js App Router file) — all in the plugin root. Brief: "Report every naming/casing/suffix violation against these rules, citing file:line and the exact rule broken. Before flagging, check for a library-mandated name or an existing sibling pattern in the same file. Under 300 words."
 
-**Security sub-agent** — give it the diff/commit range. Brief: "Invoke the `security-review` skill scoped to this diff and relay its findings verbatim, with severity. If the skill isn't available, say so explicitly instead of improvising a check."
+**Security sub-agent** — give it the diff/commit range. Read `references/check-security.md` first, then brief the sub-agent: "You are a security reviewer using the check-security skill (pasted below). Triage this diff for common patterns where speed trumps security. Focus ONLY on findings where you're >80% confident of actual exploitability. Look for hardcoded secrets, auth bypasses, missing access controls, and injection vulnerabilities. Report HIGH and MEDIUM findings only — avoid theoretical issues and noise. For each finding, provide: location (file:line), severity, issue category, description, exploit scenario, and remediation. [paste full check-security.md content]"
 
 **Libraries sub-agent** — give it the diff. Brief: "List every third-party library touched (new import, changed call, or manifest/lockfile bump). For each, resolve it via context7 (`resolve-library-id` then `query-docs`) and check the diff's usage against the current docs. Report per library: followed / violated best practice, quoting the doc excerpt that supports the verdict. If a library has no context7 match, say so — don't judge it from memory. If no third-party library is touched, report that and stop. Under 300 words."
 
