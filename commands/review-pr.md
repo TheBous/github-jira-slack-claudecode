@@ -66,7 +66,8 @@ Delegate the analysis to `ce-code-review` in report-only mode. This produces str
    mode:report-only <NUMBER>
    ```
    (pass the PR number or full URL)
-3. Wait for the review to complete. Capture the structured findings from the output — each finding includes:
+3. **Spawn persona reviewers in parallel.** The harness dispatches all selected persona sub-agents (correctness, testing, maintainability, project-standards, security, etc.) concurrently — one `task` launch per reviewer, all in the same turn. Do NOT sequence them one after another. Use the harness's bounded parallel dispatch to respect the active-subagent limit, filling freed slots as reviewers complete.
+4. Wait for all reviewers to finish. Then merge and deduplicate findings as specified by `ce-code-review` Stage 5. Capture the structured findings from the merged output — each finding includes:
    - `title` — brief description of the issue
    - `severity` — P0 (must fix before merge), P1 (should fix), P2 (fix if straightforward), P3 (discretionary)
    - `file` and `line` — exact location in the changed file
