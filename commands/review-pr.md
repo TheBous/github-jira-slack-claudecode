@@ -1,10 +1,10 @@
 ---
-description: Review a GitHub PR — analyze the diff in full file context, present a verdict, then submit a structured review with inline comments
+description: Review a GitHub PR — gather the context, delegate analysis to ce-code-review (report-only), present findings to the user, then submit a structured review with inline comments following the anchoring and suggestion rules
 ---
 
 ## Goal
 
-Act as the reviewer on a GitHub PR: gather the diff and full file context, analyze it against correctness/test-coverage/naming-convention checks, present a concise verdict to the user, and — only after confirmation — submit a structured review via `gh` with inline comments and committable suggestions.
+Act as the reviewer on a GitHub PR: gather the diff and full file context, delegate analysis to `ce-code-review` in report-only mode (structured findings, no fixes applied), present the findings as a concise verdict to the user, and — only after confirmation — submit a structured review via `gh` with inline comments and committable suggestions following the anchoring and decision rules below.
 
 ## Steps
 
@@ -56,23 +56,28 @@ curl -sf -H "Authorization: Bearer $(gh auth token)" \
 
 If the branch name matches a Jira key (pattern `[A-Za-z]+-[0-9]+`, case-insensitive, uppercase the match), fetch the ticket's summary and description with the MCP tool `getJiraIssue` — use it as extra context for judging whether the PR actually fixes the stated problem.
 
-### 3. Analyze
+### 3. Gather findings via ce-code-review
 
-Look for, in roughly this order:
+Delegate the analysis to `ce-code-review` in report-only mode. This produces structured findings without applying any fixes.
 
-1. **Correctness of the core change** — does the fix actually fix the stated problem (per the PR description and, if available, the Jira ticket)?
-2. **Migrations** (if SQL) — NULL handling, idempotency, statement ordering (FK repointing before DELETE), index/constraint match between DB and app code
-3. **Race conditions / concurrency** — retry loops, conflict fallbacks, READ COMMITTED visibility gaps
-4. **Type-system bypasses** — `as unknown as`, `any`, generic narrowing — are they documented and runtime-safe?
-5. **Comment accuracy** — comments often outlive the code; check that what they say still matches what the code does (especially after a rename)
-6. **Test coverage** — is the new logic actually tested? A mock update that only changes a key in a list does NOT test the dispatch logic behind that key
-7. **Semantic precision** — do enum/union values returned in different paths actually mean what they say
-8. **Naming conventions** — check every new or renamed identifier against `references/naming-conventions-code.md` (in the plugin root), plus `references/naming-conventions-db.md` for schema/migration changes or `references/naming-conventions-nextjs.md` for Next.js App Router files. Before flagging a violation, check for a library-mandated name or an existing sibling pattern in the same file — an inherited convention isn't a new error.
-9. **Edge cases the PR description acknowledges as deferred** — are they really safe to defer?
+1. Load the `ce-code-review` skill.
+2. Invoke it with the PR number or URL and `mode:report-only` as the arguments:
+   ```
+   mode:report-only <NUMBER>
+   ```
+   (pass the PR number or full URL)
+3. Wait for the review to complete. Capture the structured findings from the output — each finding includes:
+   - `title` — brief description of the issue
+   - `severity` — P0 (must fix before merge), P1 (should fix), P2 (fix if straightforward), P3 (discretionary)
+   - `file` and `line` — exact location in the changed file
+   - `pre_existing` — whether the issue existed before this PR's changes
+   - `suggested_fix` — optional code-level suggestion when the reviewer could provide one
 
-**Scope discipline**: a finding in code outside the PR's own diff (pre-existing, or arrived via a merge of the base branch) is not a blocking issue on this PR, even if security-relevant — note it separately for the user, don't fold it into the verdict below.
+**Scope discipline**: findings with `pre_existing: true` affect code outside the PR's own diff. Note them for the user separately but **do not** submit them as blocking inline comments on this PR — same rule as before.
 
 ### 4. Present the verdict to the user
+
+Present the findings from `ce-code-review` as a structured summary:
 
 ```
 ## Code Review: PR #N — <title>
@@ -135,6 +140,8 @@ curl -sf -X POST -H "Authorization: Bearer $(gh auth token)" \
   -d "{\"body\":\"<review index body>\",\"event\":\"REQUEST_CHANGES\"}"
 # event: "APPROVE" | "REQUEST_CHANGES" | "COMMENT" depending on the verdict
 ```
+
+**Severity mapping for the index**: P0 → Must fix before merge, P1 → Recommended, P2/P3 → Minor (discretionary).
 
 Do NOT add a "Verdict" table or a "Verified / not flagged" section to the published body — that prose stays in the step 4 chat with the user.
 
