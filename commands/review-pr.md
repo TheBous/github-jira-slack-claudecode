@@ -170,13 +170,21 @@ EOF
 
 ### 8. Add detailed sub-comments for each finding
 
-For each finding (grouped by severity in the main review), post a **detailed inline comment** that explains:
-1. The problem and affected code
-2. Why it matters (invariant, constraint, or risk)
-3. Suggested fix direction
-4. Recommended regression test (when applicable)
+For each finding (grouped by severity in the main review), post a **detailed inline comment thread** on the affected code line.
 
 **Structure of each sub-comment:**
+
+```
+<The problem — what's wrong, in technical detail>
+
+<Why it matters — invariant violated, data loss, race condition, audit trail, atomicity broken, etc.>
+
+Potremmo <direction of fix — concrete suggestion>?
+
+<Test suggestion — how to verify the fix works>
+```
+
+**To post via gh:**
 
 ```bash
 gh api repos/:owner/:repo/pulls/<NUMBER>/comments \
@@ -185,43 +193,17 @@ gh api repos/:owner/:repo/pulls/<NUMBER>/comments \
   --field path='<file>' \
   --field side='RIGHT' \
   --field line=<line> \
-  --field body="$(cat <<'EOF'
-🔴 **Must fix before merge** | 🟡 **Recommended** | 🟢 **Fix if straightforward**
-
-**Issue headline**
-
-Affected code:
-\`\`\`
-<snippet of the problematic code>
-\`\`\`
-
-**Why this matters:**
-<Explain the invariant, constraint, or risk. What could break? Data loss? Race condition? Contract violation?>
-
-**Suggested fix:**
-<Direction/approach for correction. Code snippets if trivial one-liner:>
-\`\`\`suggestion
-<replacement>
-\`\`\`
-
-Or if fix requires coordinated changes:
-\`\`\`
-<pseudocode or sketch of the fix>
-\`\`\`
-
-**Regression test:**
-<Suggest a test that would catch this if it regresses. Example: "Test concurrent saves of the status; verify confirmed_at is set atomically", or "Add integration test for draft→new transition with stale version">
-EOF
-)"
+  --field body='<comment text>'
 ```
 
-**Key principles for sub-comments**:
-- Each comment is a **separate thread** addressing one finding
-- Comments are **self-contained** — they explain the problem fully without requiring the main review body
-- Severity emoji at the top matches the finding's severity
-- Always include the "Why this matters" section to justify the concern
-- When a suggested fix is one-line and straightforward, use `\`\`\`suggestion\`\`\` block for one-click apply
-- For complex fixes, describe the approach in prose + pseudocode (no suggestion block)
+**Key principles**:
+- **1 comment per finding** — each thread is independent
+- **Problem first** — state what's wrong clearly and technically
+- **"Potremmo..."** — always propose a concrete direction, never just "this is wrong"
+- **Test suggestion** — always add how to test the fix
+- **Invariant-focused language** — "violates atomicity", "audit trail missing", "data loss risk", "race condition", "state machine violation"
+- **English content**: all comments on GitHub must be in English
+- **No severity labels in comment body** — severity is only in the main review index
 
 **Anchoring rules**:
 - `commit_id` = PR's head commit SHA
