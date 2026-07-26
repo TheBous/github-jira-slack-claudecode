@@ -28,7 +28,30 @@ curl -sf -H "Authorization: Bearer $(gh auth token)" \
 
 If there's no open PR for the current branch, ask the user to pass the URL explicitly.
 
-### 2. Fetch the review comments
+### 2. Ask about worktree usage
+
+Ask the user:
+```
+Would you like to work in an isolated worktree, or use the current branch?
+
+• **Worktree** (isolated): Creates a fresh worktree for the review cycle; safer, no local state interference
+• **Current branch** (default): Work on the current checked-out branch directly
+```
+
+Wait for the user's choice. Default to current branch if they don't specify.
+
+### 3. Switch to isolated worktree (if chosen)
+
+If the user chose worktree, create it with:
+```bash
+wt switch pr:${PR_NUMBER}
+```
+
+This creates a dedicated worktree for addressing the review. **Do not create another worktree inside ce-code-review if step 5 delegates to it** — pass context that the worktree was already created.
+
+If the user chose current branch, skip to step 4.
+
+### 4. Fetch the review comments
 
 ```bash
 gh pr view <NUMBER> --json reviews,comments \
@@ -51,7 +74,7 @@ curl -sf -H "Authorization: Bearer $(gh auth token)" \
 
 Collect both general comments and inline code comments. Sort inline comments by file, then by line number (order of appearance in the PR). General (review-level) comments should be addressed first, in chronological order.
 
-### 3. Split multi-point comments into individual items
+### 5. Split multi-point comments into individual items
 
 Before building the work queue, check every comment (general or inline) for more than one distinct issue — a numbered/bulleted list, or several unrelated observations packed into one paragraph. If a comment raises multiple points, split it into separate items, one per point, each to be proposed, approved, and resolved on its own in step 5. Never bundle multiple points into a single proposal just because they arrived in the same comment.
 
@@ -59,13 +82,13 @@ Keep each split item tagged with the `COMMENT_ID` of the comment it came from �
 
 The work queue for step 5 is built from these items, not from the raw comments: a comment with 3 points becomes 3 queue items in order; a comment with 1 point stays 1 item.
 
-### 4. Set the approach with receiving-code-review
+### 6. Set the approach with receiving-code-review
 
 If the `superpowers:receiving-code-review` skill is available in the workspace, invoke it once via the Skill tool to set the approach: technical rigor, verify before implementing, no performative agreement. Apply these principles manually to each item in the loop in step 5 — don't re-invoke the skill on every iteration.
 
 If it's not available, proceed anyway with the same principle: assess whether the item is technically sound before proposing a fix.
 
-### 5. Resolve items one at a time
+### 7. Resolve items one at a time
 
 **Never change code without the user's explicit permission, and never batch multiple items into one fix.** Work through the queue built in step 3 strictly one item at a time — even two items from the same original comment get their own full cycle below:
 
@@ -98,12 +121,19 @@ If it's not available, proceed anyway with the same principle: assess whether th
 
 5. Record the status line for this item against its `COMMENT_ID`, then move to the next item in the queue.
 
-Once every item sharing the same `COMMENT_ID` has been resolved, post the reply for that comment:
+Once every item sharing the same `COMMENT_ID` has been resolved, post the reply for that comment following the pattern: **status emoji + description + (if applicable) why the fix matters + (if applicable) how it was fixed.**
+
 - **Single item**: post its status line directly.
   ```bash
   gh api repos/:owner/:repo/pulls/comments/<COMMENT_ID>/replies \
     -X POST -f body="<status line with emoji>"
   ```
+  
+  Example:
+  ```
+  ✅ Fixed — Added version check in DispatchButton; now passes draftCA.version to the action and verifies id + version before update
+  ```
+
 - **Multiple items from a split comment**: post one consolidated reply listing every point's status, in the order they appeared in the original comment:
   ```bash
   gh api repos/:owner/:repo/pulls/comments/<COMMENT_ID>/replies \
@@ -119,15 +149,21 @@ curl -sf -X POST -H "Authorization: Bearer $(gh auth token)" \
   -d "{\"body\":\"<reply body, single line or numbered list>\"}"
 ```
 
+**Reply style — all public comments must be in English:**
+- Status emoji + brief description of the action taken
+- If status is "Acknowledged" or "Won't Fix", explain why
+- If the fix involved a broader change, name the files touched
+- Keep replies concise — one line when possible, never more than 3 lines
+
 Continue through the queue until every item — and every comment's reply — is posted.
 
-### 6. Run the tests
+### 8. Run the tests
 
 If code changes were applied during the cycle, read `references/run-tests.md` (in the plugin root) and follow the instructions to find and run the project's tests/lint/checks.
 
 If no comment required code changes, skip this step.
 
-### 7. Analyze the overall diff and identify docs to update
+### 9. Analyze the overall diff and identify docs to update
 
 After resolving all the comments in the cycle:
 ```bash
@@ -151,7 +187,7 @@ If `CONFLUENCE_PARENT_URL` is not empty, use the MCP tool `searchConfluenceUsing
 ancestor = <PARENT_PAGE_ID> AND text ~ "<changed-file>"
 ```
 
-### 8. Ask for confirmation before updating docs
+### 10. Ask for confirmation before updating docs
 
 If candidates were found (local or Confluence), show the user:
 ```
@@ -164,7 +200,7 @@ Do you want to update them? (yes/no/list which ones)
 
 Wait for a reply before proceeding.
 
-### 9. Update the documentation
+### 11. Update the documentation
 
 **Local docs**: edit the `.md` files in the `docs/` folder directly with the updated information. Show the diff before saving.
 
@@ -172,7 +208,7 @@ Wait for a reply before proceeding.
 
 If no document was found or the user declines, skip this step silently.
 
-### 10. Confirmation
+### 12. Confirmation
 
 Show the user:
 - Fixes applied for the review comments
@@ -180,3 +216,12 @@ Show the user:
 - Replies posted on the PR with their emoji statuses
 - Documentation updated: `<list of files/pages>` (if applicable)
 - Suggest pushing the branch with `git push`
+
+## Style for reply prose
+
+**All public replies on GitHub must be in English** — regardless of the language used in your conversation with the user.
+
+- **Step 7 (Reply to reviewer)** — **English only**. Status emoji + brief description + (if needed) why or how.
+- **Conversation with the user** — present in the language they used.
+
+For all GitHub replies: be concise, one line when possible (3 lines max). Format: `<emoji> <Status> — <brief reason or what changed>`
