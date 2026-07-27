@@ -1,0 +1,42 @@
+#!/bin/bash
+# Get PR info from branch or argument
+# Usage: ./get-pr-info [PR_NUMBER|PR_URL]
+
+set -e
+
+if [ -n "$1" ]; then
+  # Parse argument (number or URL)
+  if [[ "$1" =~ ^https?:// ]]; then
+    # Extract owner/repo/number from URL
+    OWNER_REPO=$(echo "$1" | sed -E 's|.*github.com/([^/]+/[^/]+).*|\1|')
+    PR_NUMBER=$(echo "$1" | sed -E 's|.*pull/([0-9]+).*|\1|')
+  else
+    # Assume it's a number
+    PR_NUMBER="$1"
+    OWNER_REPO=$(git remote get-url origin | sed -E 's#.*[:/]([^/]+/[^/]+)(\.git)?$#\1#')
+  fi
+else
+  # Detect from current branch
+  OWNER_REPO=$(git remote get-url origin | sed -E 's#.*[:/]([^/]+/[^/]+)(\.git)?$#\1#')
+
+  OUTPUT=$(gh pr view --json number,title,url 2>/dev/null || true)
+  if [ -z "$OUTPUT" ]; then
+    # TLS fallback
+    BRANCH=$(git branch --show-current)
+    OWNER=$(echo "$OWNER_REPO" | cut -d/ -f1)
+    OUTPUT=$(curl -sf -H "Authorization: Bearer $(gh auth token)" \
+      "https://api.github.com/repos/$OWNER_REPO/pulls?head=$OWNER:$BRANCH&state=open" \
+      | jq '.[0]')
+  fi
+
+  PR_NUMBER=$(echo "$OUTPUT" | jq -r '.number')
+fi
+
+if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
+  echo "Error: Could not find PR. Pass a PR number or URL."
+  exit 1
+fi
+
+IFS='/' read -r OWNER REPO <<< "$OWNER_REPO"
+
+echo "{\"owner\":\"$OWNER\",\"repo\":\"$REPO\",\"number\":$PR_NUMBER}"

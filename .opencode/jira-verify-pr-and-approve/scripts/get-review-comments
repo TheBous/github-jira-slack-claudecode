@@ -1,0 +1,69 @@
+#!/bin/bash
+# Get review comments for a PR
+# Usage: ./get-review-comments OWNER REPO PR_NUMBER
+
+set -e
+
+OWNER="$1"
+REPO="$2"
+PR_NUMBER="$3"
+
+QUERY='
+query GetPRReviews($owner: String!, $repo: String!, $number: Int!) {
+  repository(owner: $owner, name: $repo) {
+    pullRequest(number: $number) {
+      reviews(first: 100, states: [COMMENTED, CHANGES_REQUESTED]) {
+        nodes {
+          id
+          author { login }
+          body
+          state
+          comments(first: 100) {
+            nodes {
+              id
+              author { login }
+              body
+              path
+              line
+            }
+          }
+        }
+      }
+      reviewThreads(first: 100) {
+        nodes {
+          id
+          isResolved
+          comments(first: 100) {
+            nodes {
+              id
+              author { login }
+              body
+              path
+              startLine
+              line
+            }
+          }
+        }
+      }
+    }
+  }
+}
+'
+
+# Try GraphQL first
+if gh api graphql -f owner="$OWNER" -f repo="$REPO" -f number="$PR_NUMBER" -f query="$QUERY" 2>/dev/null; then
+  exit 0
+fi
+
+# Fallback to REST API
+echo "# REST API Fallback (TLS error)"
+
+# Fetch reviews
+curl -sf -H "Authorization: Bearer $(gh auth token)" \
+  "https://api.github.com/repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews" \
+  | jq '[.[] | select(.state == "CHANGES_REQUESTED" or .state == "COMMENTED") | {id, author: .user.login, body, state}]'
+
+# Fetch inline comments
+curl -sf -H "Authorization: Bearer $(gh auth token)" \
+  "https://api.github.com/repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" \
+  | jq '[.[] | {id, author: .user.login, body, path, line}]'
