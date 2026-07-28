@@ -25,13 +25,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lucvalse/debto-it",
+    "url": "https://github.com/TheBous/github-jira-slack-claudecode",
     "directory": "."
   },
   "bugs": {
-    "url": "https://github.com/lucvalse/debto-it/issues"
+    "url": "https://github.com/TheBous/github-jira-slack-claudecode/issues"
   },
-  "homepage": "https://github.com/lucvalse/debto-it#readme",
+  "homepage": "https://github.com/TheBous/github-jira-slack-claudecode#readme",
   "engines": {
     "node": ">=18"
   }
