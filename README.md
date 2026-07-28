@@ -12,6 +12,7 @@ Claude Code plugin: git → Jira → Slack workflow automation.
 | **create-pr** | Open PR against main + link Jira + notify Slack | When code is ready for review | PR opened, Jira commented, Slack notified |
 | **review-pr** | Analyze PR: correctness, naming, coverage + structured review | As a reviewer on any PR | Verdict shown, inline comments ready to submit |
 | **address-review** | Resolve each review comment one-by-one + update docs | After receiving review feedback | Comments resolved, fixes applied, PR updated |
+| **verify-resolved** | Verify that your review comments on someone else's PR were correctly addressed | After author pushes fixes on a PR you reviewed | Report shows which fixes are correct, partial, or missing |
 | **merge-pr** | Merge PR + move ticket to In Staging + notify Slack | After PR is approved | PR merged to main, ticket In Staging, Slack notified |
 | **tag** | Create release tag + transition all tickets to Done + Slack | Before production deploy | Tag created, all tickets Done, Slack notified |
 | **create-doc** | Generate new Confluence page from code | Documenting a new feature | Page created under Confluence parent |

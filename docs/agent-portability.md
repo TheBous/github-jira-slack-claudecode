@@ -34,9 +34,9 @@ the `/` entry point.
 
 ## Portable Behavior
 
-All 10 workflows live in `commands/*.md` and are identical across hosts:
+All 11 workflows live in `commands/*.md` and are identical across hosts:
 `setup`, `new-branch`, `cook`, `create-pr`, `review-pr`, `address-review`,
-`merge-pr`, `tag`, `create-doc`, `update-doc`. Credentials
+`verify-resolved`, `merge-pr`, `tag`, `create-doc`, `update-doc`. Credentials
 (`${CLAUDE_PLUGIN_DATA:-$HOME/.config/jira-git-sync}/.env`) and the Atlassian
 MCP server configuration are shared across every host — set up once, works
 everywhere.

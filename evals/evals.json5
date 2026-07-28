@@ -133,6 +133,20 @@
         "Allows the Confluence parent URL to be left blank for users who don't use Confluence",
         "Notes that Jira/Confluence auth goes through the Atlassian Rovo MCP, not manual API tokens"
       ]
+    },
+    {
+      id: 12,
+      command: "verify-resolved",
+      prompt: "Verify that my review comments on PR #128 were correctly addressed",
+      expected_output: "Fetches all threads where you commented on PR #128, evaluates each fix against the original concern, and reports which ones are correct, partial, or missing",
+      expectations: [
+        "Fetches PR #128 metadata and all threads where viewer commented",
+        "Checks for unsubmitted (PENDING) review and stops if one exists",
+        "Reads the current code at each thread's location before deciding verdict",
+        "For outdated threads, searches the file for an anchor to find moved code",
+        "Reports verdicts grouped by: fixed, not-fixed, partial, outdated",
+        "Replies to threads that need attention (and reopens if resolved but wrong)"
+      ]
     }
   ]
 }
