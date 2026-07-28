@@ -19,10 +19,8 @@ const require = createRequire(import.meta.url);
 const { parseCommandFile } = require('./jira-git-sync-frontmatter.cjs');
 
 export default async ({ client } = {}) => {
-  const jiraGitSyncSkillsDir = path.resolve(__dirname, '../../skills');
-
   return {
-    // Register slash commands + skills directory.
+    // Register slash commands from .opencode/command/*.md
     config: async (config) => {
       if (!config.command) config.command = {};
       const commandDir = path.join(__dirname, '..', 'command');
@@ -33,12 +31,6 @@ export default async ({ client } = {}) => {
           if (parsed) config.command[name] = parsed;
         }
       } catch (e) {}
-
-      config.skills = config.skills || {};
-      config.skills.paths = config.skills.paths || [];
-      if (!config.skills.paths.includes(jiraGitSyncSkillsDir)) {
-        config.skills.paths.push(jiraGitSyncSkillsDir);
-      }
     },
   };
 };
