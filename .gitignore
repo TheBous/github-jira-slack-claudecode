@@ -1,1 +1,4 @@
 .atl/
+node_modules/
+*.tgz
+.npm/
