@@ -64,24 +64,22 @@ Then use commands: `/jira-new-branch`, `/jira-create-pr`, etc.
 
 When you modify commands (`.opencode/command/*.md`) or the plugin (`.opencode/plugins/*.mjs`):
 
-1. **Sync versions across all systems**:
-   ```bash
-   npm version patch   # or minor/major
-   ```
-   This updates version in `package.json` and creates a git tag.
+**Use the publish script** (handles everything):
 
-2. **Also update** `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` to the same version.
+```bash
+./scripts/publish-plugin.sh patch    # or minor/major
+```
 
-3. **Publish to npm**:
-   ```bash
-   npm publish --access public
-   ```
+This automatically:
+1. Bumps version in `package.json` (creates git tag)
+2. Syncs version to `.claude-plugin/plugin.json`
+3. Syncs version to `.codex-plugin/plugin.json`
+4. Publishes to npm
 
-4. **Each host auto-updates**:
-   - **OpenCode**: Pulls the latest from npm automatically
-   - **Claude Code & Codex**: Reinstall the plugin or restart to get the latest version
-
-**Future improvement**: automate version sync across all three systems with a script.
+Then each host updates:
+- **OpenCode**: Pulls the latest from npm automatically
+- **Claude Code**: Reinstall the plugin or restart
+- **Codex**: Restart the app
 
 ## OpenCode
 
