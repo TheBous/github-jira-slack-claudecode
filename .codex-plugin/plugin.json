@@ -1,6 +1,6 @@
 {
   "name": "jira-git-sync",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Git workflow automation synced with Jira, Slack, and Confluence",
   "author": {
     "name": "Luca Valsecchi",
@@ -9,7 +9,14 @@
   "homepage": "https://github.com/lucvalse/debto-it",
   "repository": "https://github.com/lucvalse/debto-it",
   "license": "MIT",
-  "keywords": ["jira", "slack", "git", "github", "automation", "devops"],
+  "keywords": [
+    "jira",
+    "slack",
+    "git",
+    "github",
+    "automation",
+    "devops"
+  ],
   "skills": "./commands/",
   "interface": {
     "displayName": "jira-git-sync",
@@ -17,7 +24,10 @@
     "longDescription": "Create branches from Jira tickets, open/review/merge PRs, tag releases — all synced with Jira status updates and Slack notifications.",
     "developerName": "Luca Valsecchi",
     "category": "DevOps",
-    "capabilities": ["Skills", "Workflows"],
+    "capabilities": [
+      "Skills",
+      "Workflows"
+    ],
     "websiteURL": "https://github.com/lucvalse/debto-it#readme"
   }
 }
