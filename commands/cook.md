@@ -43,23 +43,32 @@ How do you want to approach this task?
 
 - If they choose **1**: invoke the `superpowers:brainstorming` skill before proceeding
 - If they choose **2**: invoke the `grilling` skill before proceeding
-- If they choose **4**: go directly to step 4
+- If they choose **3 or 4**: proceed to step 3
 
-This choice only affects how requirements are refined beforehand — implementation always follows TDD, regardless of which option was picked.
+This choice only affects how requirements are refined beforehand — implementation always follows SDD + TDD (Spec-Driven Development + Test-Driven Development), regardless of which option was picked.
 
-### 3. Implement
+### 3. Enter the SDD workflow
 
-Read the relevant code in the repository to understand the context before writing. Invoke the `superpowers:test-driven-development` skill and follow it: write tests for the acceptance criteria first — they should fail, since the behavior doesn't exist yet. Show the failing output, then implement just enough code to make them pass, following the existing codebase's conventions. Repeat red → green per unit of behavior rather than writing everything at once.
+Always use Spec-Driven Development. Invoke the SDD skill chain in order:
 
-Every new or renamed identifier must follow `references/naming-conventions-code.md` (in the plugin root) — always applicable. If the change touches DB schema/migrations, also follow `references/naming-conventions-db.md`; if it touches a Next.js App Router file, also follow `references/naming-conventions-nextjs.md`. Before flagging your own code as a violation, check for a library-mandated name or an existing sibling pattern in the same file — an inherited convention isn't a new error.
+1. **`sdd-explore`** — Investigate the codebase, understand current architecture, compare approaches
+2. **`sdd-propose`** — Formalize the change into a proposal with intent, scope, and approach
+3. **`sdd-spec`** — Write delta specifications with requirements and scenarios
+4. **`sdd-design`** — Create technical design document with architecture decisions
+5. **`sdd-tasks`** — Break down the change into actionable, ordered work items
+6. **`sdd-apply`** — Implement code changes following the spec and tasks
+7. **`sdd-verify`** — Validate that implementation matches specs, design, and tasks
+8. **`sdd-archive`** — Archive the completed change and persist the final report
 
-After each significant change, briefly show what you did before continuing.
+After SDD completes with successful verification, proceed to step 5.
 
-### 4. Run the tests
+### 5. Run the full test suite
 
-Read `references/run-tests.md` (in the plugin root) and follow the instructions to find and run the project's tests/lint/checks.
+SDD's `sdd-verify` already validates targeted tests. Now run the **complete test suite** to ensure no regressions:
 
-### 5. Update documentation
+Read `references/run-tests.md` (in the plugin root) and follow the instructions to find and run the project's full tests/lint/checks.
+
+### 6. Update documentation
 
 Fetch the changed files:
 ```bash
@@ -91,10 +100,11 @@ Do you want to update them? (yes/no/list which ones)
 
 Wait for confirmation. For each confirmed doc, update the relevant content to reflect the implemented changes.
 
-### 6. Final confirmation
+### 7. Final confirmation
 
 Show the user:
-- ✅ Feature/fix implemented
-- ✅ Tests: `<list of scripts>` — all green
+- ✅ Feature/fix implemented via SDD
+- ✅ Spec, design, and tasks completed and archived
+- ✅ Tests: full suite green (all scripts passed)
 - ✅ Documentation updated: `<list of files/pages>` (if applicable)
 - → Suggest the next step: `/jira-git-sync:create-pr`
