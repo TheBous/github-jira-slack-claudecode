@@ -63,7 +63,7 @@ Then use commands: `/jira-new-branch`, `/jira-create-pr`, etc.
 ### Antigravity CLI
 
 ```bash
-agy plugin install https://github.com/lucvalse/debto-it
+agy plugin install https://github.com/TheBous/github-jira-slack-claudecode
 ```
 
 This loads the workflows from `AGENTS.md`. Use them as skills: `@jira-new-branch`, `@jira-create-pr`, etc.
