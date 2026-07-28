@@ -1,10 +1,12 @@
 ---
-description: Resolve code review comments, then update documentation where needed
+description: Resolve code review comments on your PR — implement fixes, apply only after user approval, reply on GitHub, then update documentation
 ---
 
 ## Goal
 
-Read the open comments on a GitHub PR and resolve them one at a time: for each comment, propose a fix, wait for the user's approval, apply it only after confirmation, then reply on the PR. No code is changed without explicit permission. At the end of the cycle, update documentation if needed.
+You received code review feedback on your PR. This workflow guides you through resolving each comment one at a time: read the comment, propose a fix, wait for approval, apply it, then reply on GitHub with a clear verdict. No code is changed without your explicit permission.
+
+**Use the evaluation rubric** (`references/evaluation-rubric.md`) to categorize each fix: `fixed`, `partial`, `not-fixed`, `needs-look`, or `outdated`. This ensures consistent reply messaging and clear communication back to reviewers.
 
 ## Steps
 
@@ -90,7 +92,7 @@ If it's not available, proceed anyway with the same principle: assess whether th
 
 ### 7. Resolve items one at a time
 
-**Never change code without the user's explicit permission, and never batch multiple items into one fix.** Work through the queue built in step 3 strictly one item at a time — even two items from the same original comment get their own full cycle below:
+**Never change code without the user's explicit permission, and never batch multiple items into one fix.** Work through the queue built in step 5 strictly one item at a time:
 
 1. Show the item:
    ```
@@ -98,72 +100,67 @@ If it's not available, proceed anyway with the same principle: assess whether th
    "<item text>"
    ```
    If this item came from a split multi-point comment, say so and show only that point's text, not the whole original comment.
-2. Analyze the item and propose a concrete fix. Read the full file locally around `<file>:<line>` — not just the snippet quoted in the comment — before proposing anything; the comment alone rarely shows the surrounding function body, type definitions, or imports needed to judge the fix correctly. Any new or renamed identifier in the fix must follow `references/naming-conventions-code.md` (in the plugin root) — plus `references/naming-conventions-db.md` for schema/migration changes or `references/naming-conventions-nextjs.md` for Next.js App Router files. Check for a library-mandated name or an existing sibling pattern before treating something as a violation.
+
+2. Analyze the item and propose a concrete fix. Read the full file locally around `<file>:<line>` — not just the snippet quoted in the comment — before proposing anything. The comment alone rarely shows the surrounding function body, type definitions, or imports needed to judge the fix correctly. Any new or renamed identifier in the fix must follow `references/naming-conventions-code.md` (in the plugin root) — plus `references/naming-conventions-db.md` for schema/migration changes or `references/naming-conventions-nextjs.md` for Next.js App Router files. Check for a library-mandated name or an existing sibling pattern before treating something as a violation.
    ```
    💡 Proposal: <description of the change you would make>
 
    Sound good? Do you want to change it or do you have a different opinion?
    ```
+
 3. Wait for the user's reply. Depending on what they say:
    - **Approves**: apply the fix to the code
    - **Modifies the proposal**: adapt the fix per their instructions, then apply it
    - **Disagrees / wants something else**: discuss until you converge on an action (which may also be "don't change anything")
-4. Determine the final status based on what was decided, using this table:
 
-   | Status | Format | When to use it |
-   |-------|---------|---------------|
-   | ✅ Fixed | `✅ Fixed — <brief description of the change>` | Fix applied |
-   | 🔄 Refactored | `🔄 Refactored — <what changed and why>` | Fix that required a broader restructuring |
-   | 💬 Acknowledged | `💬 Acknowledged — <reason for not changing>` | Valid comment but doesn't require a code change |
-   | ❓ Clarification needed | `❓ Clarification needed — <specific question>` | The comment is unclear or needs more context from the reviewer |
-   | 🚫 Won't Fix | `🚫 Won't Fix — <technical or product reasoning>` | Deliberate choice not to apply the change |
-   | ⛔ Stalled | `⛔ Stalled — <dependency or blocker>` | Can't be resolved now, blocked by something external |
+4. Determine the verdict using `references/evaluation-rubric.md`:
 
-5. Record the status line for this item against its `COMMENT_ID`, then move to the next item in the queue.
+   | Verdict | Meaning | Reply? |
+   |---------|---------|--------|
+   | ✅ `fixed` | The code now correctly addresses the concern | No — report only |
+   | ⚠️ `partial` | Partially addressed — some aspects still missing | Yes — quote original concern, explain what remains |
+   | ❌ `not-fixed` | The concern was not addressed | Yes — explain what's still needed |
+   | ❓ `needs-look` | Can't determine from code alone | No — surface to user |
+   | 🔇 `outdated` | The code at this location no longer exists | No — report only |
 
-Once every item sharing the same `COMMENT_ID` has been resolved, post the reply for that comment following the pattern: **status emoji + description + (if applicable) why the fix matters + (if applicable) how it was fixed.**
+   Default to trusting the fix: if the code now addresses your concern — even if the approach differs — mark it as `fixed`. The author may have chosen a better approach than your suggestion.
 
-- **Single item**: post its status line directly.
-  ```bash
-  gh api repos/:owner/:repo/pulls/comments/<COMMENT_ID>/replies \
-    -X POST -f body="<status line with emoji>"
-  ```
-  
-  Example:
-  ```
-  ✅ Fixed — Added version check in DispatchButton; now passes draftCA.version to the action and verifies id + version before update
-  ```
+5. For fixes applied (`fixed` verdict), record the status line:
+   ```
+   ✅ Fixed — <brief description of what changed>
+   ```
+   
+   For partial or not-fixed verdicts, use a reply following the ce-resolve-pr-feedback pattern:
+   ```markdown
+   > [quote the specific sentence from the original review comment]
 
-- **Multiple items from a split comment**: post one consolidated reply listing every point's status, in the order they appeared in the original comment:
-  ```bash
-  gh api repos/:owner/:repo/pulls/comments/<COMMENT_ID>/replies \
-    -X POST -f body="1. <status line 1>
-  2. <status line 2>
-  3. <status line 3>"
-  ```
+   Still needs attention: [what's missing or wrong with the current fix]
+   ```
 
-**TLS fallback** (either case):
-```bash
-curl -sf -X POST -H "Authorization: Bearer $(gh auth token)" \
-  "https://api.github.com/repos/$OWNER_REPO/pulls/comments/<COMMENT_ID>/replies" \
-  -d "{\"body\":\"<reply body, single line or numbered list>\"}"
-```
+   Post the reply:
+   ```bash
+   SKILL_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+   echo "[reply body]" | GH_HOST="${PR_HOST:-github.com}" bash "$SKILL_DIR/scripts/reply-to-pr-thread" "$THREAD_ID"
+   ```
 
-**Reply style — all public comments must be in English:**
-- Status emoji + brief description of the action taken
-- If status is "Acknowledged" or "Won't Fix", explain why
-- If the fix involved a broader change, name the files touched
-- Keep replies concise — one line when possible, never more than 3 lines
+6. Record the verdict for this item against its `COMMENT_ID`, then move to the next item in the queue.
 
-Continue through the queue until every item — and every comment's reply — is posted.
+Continue through the queue until every item has been resolved and replied to.
 
-### 8. Run the tests
+### 8. Shared Helpers
+
+Before starting, note these shared references you'll use during the workflow:
+- `references/evaluation-rubric.md` — how to judge each comment's fix (step 7)
+- `references/run-tests.md` — how to find and run tests (step 9)
+- `references/naming-conventions-{code,db,nextjs}.md` — naming rules for fixes
+
+### 9. Run the tests
 
 If code changes were applied during the cycle, read `references/run-tests.md` (in the plugin root) and follow the instructions to find and run the project's tests/lint/checks.
 
 If no comment required code changes, skip this step.
 
-### 9. Analyze the overall diff and identify docs to update
+### 10. Analyze the overall diff and identify docs to update
 
 After resolving all the comments in the cycle:
 ```bash
@@ -187,7 +184,7 @@ If `CONFLUENCE_PARENT_URL` is not empty, use the MCP tool `searchConfluenceUsing
 ancestor = <PARENT_PAGE_ID> AND text ~ "<changed-file>"
 ```
 
-### 10. Ask for confirmation before updating docs
+### 11. Ask for confirmation before updating docs
 
 If candidates were found (local or Confluence), show the user:
 ```
@@ -200,7 +197,7 @@ Do you want to update them? (yes/no/list which ones)
 
 Wait for a reply before proceeding.
 
-### 11. Update the documentation
+### 12. Update the documentation
 
 **Local docs**: edit the `.md` files in the `docs/` folder directly with the updated information. Show the diff before saving.
 
@@ -208,7 +205,7 @@ Wait for a reply before proceeding.
 
 If no document was found or the user declines, skip this step silently.
 
-### 12. Confirmation
+### 13. Confirmation
 
 Show the user:
 - Fixes applied for the review comments
