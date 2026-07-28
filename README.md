@@ -9,6 +9,8 @@ Claude Code plugin: git → Jira → Slack workflow automation.
 | **setup** | Configure Jira, Slack, Confluence credentials | Once, at project start | Credentials saved locally in `.env` |
 | **new-branch** | Create branch from Jira ticket + move ticket to In Progress | Start a task | Branch created, Slack notified, ticket In Progress |
 | **cook** | Implement feature/fix: write code, run tests, update docs | While developing on the branch | Code committed, tests passed, docs current |
+| **serve-up** | Detect the runtime (compose/Dockerfile/package.json) + start it detached on localhost | To try the change in a real browser | Service running in background, local + LAN URLs shown |
+| **serve-down** | Stop and clean up whatever `serve-up` started | When done testing locally | Stack/container/process stopped, port verified free |
 | **create-pr** | Open PR against main + link Jira + notify Slack | When code is ready for review | PR opened, Jira commented, Slack notified |
 | **review-pr** | Analyze PR: correctness, naming, coverage + structured review | As a reviewer on any PR | Verdict shown, inline comments ready to submit |
 | **address-review** | Resolve each review comment one-by-one + update docs | After receiving review feedback | Comments resolved, fixes applied, PR updated |

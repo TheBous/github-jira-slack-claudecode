@@ -107,4 +107,4 @@ Show the user:
 - ✅ Spec, design, and tasks completed and archived
 - ✅ Tests: full suite green (all scripts passed)
 - ✅ Documentation updated: `<list of files/pages>` (if applicable)
-- → Suggest the next step: `/jira-git-sync:create-pr`
+- → Suggest the next step: `/jira-git-sync:serve-up` to try it in a browser, or `/jira-git-sync:create-pr` to open the PR

@@ -11,6 +11,8 @@ Full step-by-step logic for each workflow lives in `commands/*.md` (shared helpe
 | `commands/setup.md` | Configure Jira, Slack, Confluence credentials |
 | `commands/new-branch.md` | Create branch from Jira ticket, move ticket to In Progress, notify Slack |
 | `commands/cook.md` | Implement feature/fix: write code, run tests, update docs |
+| `commands/serve-up.md` | Detect the runtime (compose/Dockerfile/package.json) and start the app detached on localhost |
+| `commands/serve-down.md` | Stop and clean up the local service started by serve-up |
 | `commands/create-pr.md` | Open PR against main, link Jira, notify Slack |
 | `commands/review-pr.md` | Analyze PR: correctness, naming, coverage + structured review |
 | `commands/address-review.md` | Resolve review comments one-by-one, update docs |

@@ -5,7 +5,7 @@ description: Git → Jira → Slack → Confluence workflow automation. Use when
 
 # jira-git-sync
 
-A bundle of 11 git/Jira/Slack/Confluence workflows. Each one lives as a plain markdown file under `commands/`. **Do not read them all** — only read the specific one the user is asking for, then follow its numbered steps.
+A bundle of 13 git/Jira/Slack/Confluence workflows. Each one lives as a plain markdown file under `commands/`. **Do not read them all** — only read the specific one the user is asking for, then follow its numbered steps.
 
 Shared helpers (read on demand when a step references them):
 - `references/jira-transition.md` — standard Jira transition + comment pattern
@@ -24,6 +24,8 @@ Map the user's request to one of these files and `read` it before acting:
 | Configure Jira/Slack/Confluence credentials (first run) | `commands/setup.md` |
 | "Start this ticket", "create a branch for DC-443" | `commands/new-branch.md` |
 | "Implement this", "cook the feature", "fix the bug" | `commands/cook.md` |
+| "Run it locally", "start the app", "spin up the service" | `commands/serve-up.md` |
+| "Stop the service", "tear it down", "shut it off" | `commands/serve-down.md` |
 | "Open a PR", "create pull request" | `commands/create-pr.md` |
 | "Review this PR", "look at PR #N" | `commands/review-pr.md` |
 | "Address review comments", "fix the review feedback" | `commands/address-review.md` |
