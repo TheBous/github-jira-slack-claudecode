@@ -49,7 +49,8 @@ echo -e "${GREEN}   ✓ Updated gemini-extension.json${NC}\n"
 
 # Step 5: Stage version files for commit
 echo -e "${BLUE}5. Staging version updates...${NC}"
-git add package.json package-lock.json .claude-plugin/plugin.json .codex-plugin/plugin.json gemini-extension.json
+git add package.json .claude-plugin/plugin.json .codex-plugin/plugin.json gemini-extension.json
+[ -f package-lock.json ] && git add package-lock.json
 echo -e "${GREEN}   ✓ Staged${NC}\n"
 
 # Step 6: Alert user to publish manually (avoid silent 2FA failures)
