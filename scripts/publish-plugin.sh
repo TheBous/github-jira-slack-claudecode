@@ -52,18 +52,20 @@ echo -e "${BLUE}5. Staging version updates...${NC}"
 git add package.json package-lock.json .claude-plugin/plugin.json .codex-plugin/plugin.json gemini-extension.json
 echo -e "${GREEN}   ✓ Staged${NC}\n"
 
-# Step 6: Publish to npm
-echo -e "${BLUE}6. Publishing to npm...${NC}"
-npm publish --access public
-echo -e "${GREEN}   ✓ Published to npm${NC}\n"
+# Step 6: Alert user to publish manually (avoid silent 2FA failures)
+echo -e "${GREEN}✅ Version sync complete! v$NEW_VERSION ready.${NC}\n"
+echo -e "${RED}⚠️  MANUAL STEP REQUIRED:${NC}"
+echo -e "   Run this command to publish to npm:\n"
+echo -e "   ${BLUE}npm publish --access public${NC}\n"
+echo -e "   (This requires 2FA authentication)\n"
 
-# Step 7: Done
-echo -e "${GREEN}✅ Done! Published v$NEW_VERSION to:${NC}"
-echo -e "${GREEN}   • npm (@lucvalse/jira-git-sync-opencode-plugin)${NC}"
-echo -e "${GREEN}   • Claude Code (marketplace)${NC}"
-echo -e "${GREEN}   • Codex (marketplace)${NC}"
-echo -e "${GREEN}   • Antigravity CLI${NC}\n"
-echo -e "${BLUE}Next steps:${NC}"
+# Step 7: Summary
+echo -e "${BLUE}After npm publish, updates will reach:${NC}"
+echo -e "   • npm (@lucvalse/jira-git-sync-opencode-plugin)"
+echo -e "   • Claude Code (marketplace)"
+echo -e "   • Codex (marketplace)"
+echo -e "   • Antigravity CLI\n"
+echo -e "${BLUE}Then in each host:${NC}"
 echo -e "   1. Claude Code: reinstall the plugin or restart"
 echo -e "   2. Codex: restart the app"
 echo -e "   3. OpenCode: auto-updates on next startup"
