@@ -12,7 +12,6 @@ Claude Code plugin: git → Jira → Slack workflow automation.
 | **create-pr** | Open PR against main + link Jira + notify Slack | When code is ready for review | PR opened, Jira commented, Slack notified |
 | **review-pr** | Analyze PR: correctness, naming, coverage + structured review | As a reviewer on any PR | Verdict shown, inline comments ready to submit |
 | **address-review** | Resolve each review comment one-by-one + update docs | After receiving review feedback | Comments resolved, fixes applied, PR updated |
-| **judge** | Naming, security, and library-best-practices review via 3 parallel sub-agents | Before opening/merging a PR, or on demand | Three side-by-side reports: naming, security, libraries |
 | **merge-pr** | Merge PR + move ticket to In Staging + notify Slack | After PR is approved | PR merged to main, ticket In Staging, Slack notified |
 | **tag** | Create release tag + transition all tickets to Done + Slack | Before production deploy | Tag created, all tickets Done, Slack notified |
 | **create-doc** | Generate new Confluence page from code | Documenting a new feature | Page created under Confluence parent |
@@ -133,9 +132,8 @@ Your harness **must have** these MCP servers configured before using `jira-git-s
 | Server | Used By | Purpose |
 |--------|---------|---------|
 | **Atlassian** (`plugin:productivity:atlassian` in Claude Code) | `new-branch`, `cook`, `create-pr`, `review-pr`, `merge-pr`, `tag`, `create-doc`, `update-doc` | Fetch Jira ticket details, transition tickets, comment on Jira, create/update Confluence pages |
-| **context7** (`plugin:context7:context7` in Claude Code) | `judge` (libraries sub-agent) | Resolve third-party library documentation to verify best-practice usage |
 
-Both servers are configured with shared credentials at `~/.config/jira-git-sync/.env` (set up once via `/jira-git-sync:setup`).
+The server is configured with shared credentials at `~/.config/jira-git-sync/.env` (set up once via `/jira-git-sync:setup`).
 
 ### Required Skills
 
@@ -146,7 +144,6 @@ Your harness **should have** these skills installed:
 | `superpowers:brainstorming` | `cook` | No (user choice) | Explore design options before implementation |
 | `grilling` | `cook` | No (user choice) | Intensive Q&A to nail down requirements |
 | `superpowers:test-driven-development` | `cook` | Yes | Test-first implementation workflow |
-| `context7:docs-researcher` | `judge` | No | Enhanced library documentation lookup (complements MCP context7) |
 
 Skills are installed globally and automatically available in all Claude Code projects. If missing, workflows will suggest installing them or offer alternatives.
 
