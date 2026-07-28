@@ -1,6 +1,6 @@
 {
   "name": "@lucvalse/jira-git-sync-opencode-plugin",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "OpenCode plugin for jira-git-sync — Git workflow automation with Jira, Slack, and Confluence",
   "type": "module",
   "main": ".opencode/plugins/jira-git-sync.mjs",
