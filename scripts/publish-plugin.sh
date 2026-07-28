@@ -41,22 +41,30 @@ jq ".version = \"$NEW_VERSION\"" .codex-plugin/plugin.json > .codex-plugin/plugi
 mv .codex-plugin/plugin.json.tmp .codex-plugin/plugin.json
 echo -e "${GREEN}   ✓ Updated .codex-plugin/plugin.json${NC}\n"
 
-# Step 4: Stage version files for commit
-echo -e "${BLUE}4. Staging version updates...${NC}"
-git add package.json package-lock.json .claude-plugin/plugin.json .codex-plugin/plugin.json
+# Step 4: Sync version to gemini-extension.json (Antigravity)
+echo -e "${BLUE}4. Syncing version to gemini-extension.json (Antigravity)...${NC}"
+jq ".version = \"$NEW_VERSION\"" gemini-extension.json > gemini-extension.json.tmp
+mv gemini-extension.json.tmp gemini-extension.json
+echo -e "${GREEN}   ✓ Updated gemini-extension.json${NC}\n"
+
+# Step 5: Stage version files for commit
+echo -e "${BLUE}5. Staging version updates...${NC}"
+git add package.json package-lock.json .claude-plugin/plugin.json .codex-plugin/plugin.json gemini-extension.json
 echo -e "${GREEN}   ✓ Staged${NC}\n"
 
-# Step 5: Publish to npm
-echo -e "${BLUE}5. Publishing to npm...${NC}"
+# Step 6: Publish to npm
+echo -e "${BLUE}6. Publishing to npm...${NC}"
 npm publish --access public
 echo -e "${GREEN}   ✓ Published to npm${NC}\n"
 
-# Step 6: Done
+# Step 7: Done
 echo -e "${GREEN}✅ Done! Published v$NEW_VERSION to:${NC}"
 echo -e "${GREEN}   • npm (@lucvalse/jira-git-sync-opencode-plugin)${NC}"
 echo -e "${GREEN}   • Claude Code (marketplace)${NC}"
-echo -e "${GREEN}   • Codex (marketplace)${NC}\n"
+echo -e "${GREEN}   • Codex (marketplace)${NC}"
+echo -e "${GREEN}   • Antigravity CLI${NC}\n"
 echo -e "${BLUE}Next steps:${NC}"
 echo -e "   1. Claude Code: reinstall the plugin or restart"
 echo -e "   2. Codex: restart the app"
 echo -e "   3. OpenCode: auto-updates on next startup"
+echo -e "   4. Antigravity: will pick up the latest version from GitHub"

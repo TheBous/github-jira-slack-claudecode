@@ -60,6 +60,16 @@ Add to your `opencode.json`:
 
 Then use commands: `/jira-new-branch`, `/jira-create-pr`, etc.
 
+### Antigravity CLI
+
+```bash
+agy plugin install https://github.com/lucvalse/debto-it
+```
+
+This loads the workflows from `AGENTS.md`. Use them as skills: `@jira-new-branch`, `@jira-create-pr`, etc.
+
+(Antigravity is Google's new name for Gemini CLI.)
+
 ### Updating the Plugin (All Hosts)
 
 When you modify commands (`.opencode/command/*.md`) or the plugin (`.opencode/plugins/*.mjs`):
