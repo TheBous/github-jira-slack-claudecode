@@ -33,25 +33,55 @@ Claude Code plugin: git → Jira → Slack workflow automation.
 /jira-git-sync:setup
 ```
 
+### Codex
+
+```bash
+# Add the marketplace (once per team)
+codex plugin marketplace add lucvalse/jira-git-sync
+
+# Install the plugin
+codex plugin add jira-git-sync
+
+# Configure credentials (interactive)
+@jira-git-sync:setup
+```
+
+Then restart Codex and use skills with `@jira-new-branch`, `@jira-create-pr`, etc.
+
+### OpenCode
+
+Add to your `opencode.json`:
+
+```json
+{
+  "plugin": ["@lucvalse/jira-git-sync-opencode-plugin"]
+}
+```
+
+Then use commands: `/jira-new-branch`, `/jira-create-pr`, etc.
+
 ### Updating the Plugin (All Hosts)
 
-After making changes to `.opencode/command/*.md` or `.opencode/plugins/*.mjs`:
+When you modify commands (`.opencode/command/*.md`) or the plugin (`.opencode/plugins/*.mjs`):
 
-1. **Bump the version** in `package.json`:
+1. **Sync versions across all systems**:
    ```bash
    npm version patch   # or minor/major
    ```
+   This updates version in `package.json` and creates a git tag.
 
-2. **Publish to npm**:
+2. **Also update** `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` to the same version.
+
+3. **Publish to npm**:
    ```bash
    npm publish --access public
    ```
 
-3. **Update locally**:
-   - **Claude Code**: Updates happen automatically when you reinstall the plugin or restart
-   - **OpenCode**: Run `npm update @lucvalse/jira-git-sync-opencode-plugin` or let OpenCode auto-update on next startup
+4. **Each host auto-updates**:
+   - **OpenCode**: Pulls the latest from npm automatically
+   - **Claude Code & Codex**: Reinstall the plugin or restart to get the latest version
 
-Both Claude Code and OpenCode will fetch the latest version from npm — no manual installation or symlink updates needed.
+**Future improvement**: automate version sync across all three systems with a script.
 
 ## OpenCode
 
