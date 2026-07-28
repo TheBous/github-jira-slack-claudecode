@@ -20,6 +20,8 @@ Claude Code plugin: git → Jira → Slack workflow automation.
 
 ## Installation
 
+### Claude Code
+
 ```bash
 # Add the marketplace (once per team)
 /plugin marketplace add lucvalse/jira-git-sync
@@ -31,14 +33,39 @@ Claude Code plugin: git → Jira → Slack workflow automation.
 /jira-git-sync:setup
 ```
 
+### Updating the Plugin (All Hosts)
+
+After making changes to `.opencode/command/*.md` or `.opencode/plugins/*.mjs`:
+
+1. **Bump the version** in `package.json`:
+   ```bash
+   npm version patch   # or minor/major
+   ```
+
+2. **Publish to npm**:
+   ```bash
+   npm publish --access public
+   ```
+
+3. **Update locally**:
+   - **Claude Code**: Updates happen automatically when you reinstall the plugin or restart
+   - **OpenCode**: Run `npm update @lucvalse/jira-git-sync-opencode-plugin` or let OpenCode auto-update on next startup
+
+Both Claude Code and OpenCode will fetch the latest version from npm — no manual installation or symlink updates needed.
+
 ## OpenCode
 
-```bash
-git clone <questa-repo> ~/dev/jira-git-sync   # una volta sola
-bash ~/dev/jira-git-sync/scripts/install-opencode.sh
+Install the plugin from npm:
+
+```json
+{
+  "plugin": ["@lucvalse/jira-git-sync-opencode-plugin"]
+}
 ```
 
-Lo script symlinka `SKILL.md` (router) in `~/.agents/skills/jira-git-sync` e gli 11 comandi in `~/.config/opencode/commands/`. Dopo aver riavviato OpenCode:
+Add to your project's `opencode.json`. OpenCode installs it automatically.
+
+Then use the commands:
 
 ```
 /jira-new-branch DC-443
@@ -47,11 +74,11 @@ Lo script symlinka `SKILL.md` (router) in `~/.agents/skills/jira-git-sync` e gli
 /jira-tag v1.2.3
 ```
 
-Stesso UX di `/jira-git-sync:<workflow>` in Claude Code — solo lo slug è più corto perché OpenCode non supporta `:` nei nomi comando (`/jira-<workflow>` invece di `/jira-git-sync:<workflow>`).
+(Shorter than Claude Code's `/jira-git-sync:<workflow>` because OpenCode doesn't support `:` in command names.)
 
-Aggiornamenti: `git pull` nel clone — i symlink riflettono le nuove versioni, niente reinstallazione. Il server MCP Atlassian va configurato a parte in OpenCode, stesse credenziali di Claude Code (`~/.config/jira-git-sync/.env`).
+The Atlassian MCP server must be configured separately in OpenCode; use the same credentials as Claude Code (`~/.config/jira-git-sync/.env`).
 
-Dettagli su come ogni host (Claude Code, OpenCode, agenti generici via `AGENTS.md`) espone gli stessi workflow: [docs/agent-portability.md](docs/agent-portability.md).
+For details on how each host (Claude Code, OpenCode, generic agents via `AGENTS.md`) exposes the same workflows: [docs/agent-portability.md](docs/agent-portability.md).
 
 ## Requirements
 
